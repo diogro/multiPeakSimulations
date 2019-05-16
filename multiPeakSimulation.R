@@ -10,7 +10,7 @@ diff_cut_off = 1e-4
 max_gens = 100
 max_stand_still = 10
 
-calculateTrajectory <- function (G, W, omega = diag(dim(G)[1]), start_position = rep(0, dim(G)[1]), scale = 2) {
+calculateTrajectory <- function (G, W_bar, omega = diag(dim(G)[1]), start_position = rep(0, dim(G)[1]), scale = 2) {
   p = dim(G)[1]
   trajectory = matrix(NA, max_gens, p)
   betas = matrix(NA, max_gens, p)
@@ -41,5 +41,40 @@ calculateTrajectory <- function (G, W, omega = diag(dim(G)[1]), start_position =
               net_beta = net_beta,
               net_dz = net_dz))
 }
-out = calculateTrajectory(G, NULL, start_position = c(1.5, 0), scale = 10)
-plot(out$trajectory)
+
+w_cov = matrix(c(1.0, 0.0,
+                 0.0, 1.0), ncol = 2)
+
+
+W_bar_multi = function(x) {
+  log(
+    dmvnorm(x, mean = c(4, 5), sigma = w_cov) +
+      1.1*dmvnorm(x, mean = c(1, 5), sigma = w_cov) +
+      dmvnorm(x, mean = c(2, 2), sigma = w_cov) +
+      dmvnorm(x, mean = c(7, 5), sigma = w_cov) +
+      dmvnorm(x, mean = c(5, 2), sigma = w_cov))
+}
+
+W_bar_single = function(x) {
+  log(dmvnorm(x, mean = c(3, 3), sigma = w_cov))
+}
+
+G_corr = matrix(c(1.1, 0.8,
+             0.8, 1.0), ncol = 2)
+
+G_diag = matrix(c(1.1, 0.0,
+                  0.0, 1.0), ncol = 2)
+
+n_sims = 100
+results = vector("list", n_sims)
+for(i in 1:n_sims){
+  random_start = runif(2, -10, 10)
+  results[[i]] = calculateTrajectory(G, W_bar, start_position = random_start, scale = 10)
+}
+
+mypalette = colorRampPalette(c(wes_palette(10, name = "Zissou1", type = "continuous"), "darkred"))(n_sims)
+
+plot(results[[1]]$trajectory, xlim = c(-10, 10), ylim = c(-10, 10))
+for(i in 2:n_sims){
+  points(results[[i]]$trajectory, col=mypalette[i])  
+}
