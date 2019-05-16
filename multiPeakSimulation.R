@@ -85,6 +85,7 @@ for(i in 2:n_sims){
 plotDzgmax_normdz = function(results){
   dz_gmax = sapply(results, function(x) vector_cor(x$net_dz, gmax_corr))
   norm_dz = sapply(results, function(x) Norm(x$net_dz))
-  plot(dz_gmax, norm_dz, pch = 19, xlab = expression(paste("Vector correlation between ", Delta,"z and ",g[max])),
+  plot(dz_gmax, norm_dz, pch = 19, 
+       xlab = expression(paste("Vector correlation between ", Delta,"z and ",g[max])),
        ylab = expression(paste("||", Delta,"z||")))
 }
