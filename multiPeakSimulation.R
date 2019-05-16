@@ -10,6 +10,8 @@ diff_cut_off = 1e-4
 max_gens = 100
 max_stand_still = 10
 
+vector_cor = function(x, y) abs(Normalize(x) %*% Normalize(y))
+
 calculateTrajectory <- function (G, W_bar, omega = diag(dim(G)[1]), start_position = rep(0, dim(G)[1]), scale = 2) {
   p = dim(G)[1]
   trajectory = matrix(NA, max_gens, p)
@@ -61,15 +63,16 @@ W_bar_single = function(x) {
 
 G_corr = matrix(c(1.1, 0.8,
              0.8, 1.0), ncol = 2)
+gmax_corr = eigen(G_corr)$vectors[,1]
 
 G_diag = matrix(c(1.1, 0.0,
                   0.0, 1.0), ncol = 2)
 
-n_sims = 100
+n_sims = 1000
 results = vector("list", n_sims)
 for(i in 1:n_sims){
   random_start = runif(2, -10, 10)
-  results[[i]] = calculateTrajectory(G, W_bar, start_position = random_start, scale = 10)
+  results[[i]] = calculateTrajectory(G_corr, W_bar, start_position = random_start, scale = 10)
 }
 
 mypalette = colorRampPalette(c(wes_palette(10, name = "Zissou1", type = "continuous"), "darkred"))(n_sims)
@@ -77,4 +80,11 @@ mypalette = colorRampPalette(c(wes_palette(10, name = "Zissou1", type = "continu
 plot(results[[1]]$trajectory, xlim = c(-10, 10), ylim = c(-10, 10))
 for(i in 2:n_sims){
   points(results[[i]]$trajectory, col=mypalette[i])  
+}
+
+plotDzgmax_normdz = function(results){
+  dz_gmax = sapply(results, function(x) vector_cor(x$net_dz, gmax_corr))
+  norm_dz = sapply(results, function(x) Norm(x$net_dz))
+  plot(dz_gmax, norm_dz, pch = 19, xlab = expression(paste("Vector correlation between ", Delta,"z and ",g[max])),
+       ylab = expression(paste("||", Delta,"z||")))
 }
