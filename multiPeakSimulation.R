@@ -1,48 +1,4 @@
-if(!require(lattice)) { install.packages("lattice"); library(lattice) }
-if(!require(mvtnorm)) { install.packages("mvtnorm"); library(mvtnorm) }
-if(!require(numDeriv)) { install.packages("numDeriv"); library(numDeriv) }
-if(!require(ellipse)) { install.packages("ellipse"); library(ellipse) }
-if(!require(grDevices)) { install.packages("grDevices"); library(grDevices) }
-if(!require(wesanderson)) { install.packages("wesanderson"); library(wesanderson) }
-if(!require(evolqg)){install.packages("evolqg"); library(evolqg)}
-
-diff_cut_off = 1e-4
-max_gens = 100
-max_stand_still = 10
-
-vector_cor = function(x, y) abs(Normalize(x) %*% Normalize(y))
-
-calculateTrajectory <- function (G, W_bar, omega = diag(dim(G)[1]), start_position = rep(0, dim(G)[1]), scale = 2) {
-  p = dim(G)[1]
-  trajectory = matrix(NA, max_gens, p)
-  betas = matrix(NA, max_gens, p)
-  current_position = start_position
-  stand_still_counter = 0
-  net_beta = rep(0, p)
-  gen = 1
-  while(gen <= max_gens){
-    trajectory[gen,] = current_position
-    beta = grad(W_bar, t(current_position))
-    betas[gen,] = beta
-    net_beta = net_beta + beta
-    next_position = current_position + (G/scale)%*%beta
-    if(Norm(next_position - current_position) < diff_cut_off){
-      stand_still_counter = stand_still_counter + 1
-    }
-    if(stand_still_counter > max_stand_still){
-      trajectory = unique(trajectory[!is.na(trajectory[,1]),])
-      betas = betas[!is.na(betas[,1]),]
-      break
-    }
-    net_dz = trajectory[dim(trajectory)[1],] - start_position
-    current_position = next_position
-    gen = gen+1
-  }
-  return(list(trajectory = trajectory, 
-              betas = betas, 
-              net_beta = net_beta,
-              net_dz = net_dz))
-}
+source("./trajectoryTools.R")
 
 w_cov = matrix(c(1.0, 0.0,
                  0.0, 1.0), ncol = 2)
@@ -51,11 +7,12 @@ w_cov = matrix(c(1.0, 0.0,
 W_bar_multi = function(x) {
   log(
     dmvnorm(x, mean = c(4, 5), sigma = w_cov) +
-      1.1*dmvnorm(x, mean = c(1, 5), sigma = w_cov) +
-      dmvnorm(x, mean = c(2, 2), sigma = w_cov) +
-      dmvnorm(x, mean = c(7, 5), sigma = w_cov) +
-      dmvnorm(x, mean = c(5, 2), sigma = w_cov))
+    dmvnorm(x, mean = c(1, 5), sigma = w_cov) +
+    dmvnorm(x, mean = c(2, 2), sigma = w_cov) +
+    dmvnorm(x, mean = c(7, 5), sigma = w_cov) +
+    dmvnorm(x, mean = c(5, 2), sigma = w_cov))
 }
+plotW_bar(W_bar_multi)
 
 W_bar_single = function(x) {
   log(dmvnorm(x, mean = c(3, 3), sigma = w_cov))
@@ -67,25 +24,21 @@ gmax_corr = eigen(G_corr)$vectors[,1]
 
 G_diag = matrix(c(1.1, 0.0,
                   0.0, 1.0), ncol = 2)
+gmax_diag = eigen(G_diag)$vectors[,1]
 
-n_sims = 1000
-results = vector("list", n_sims)
+
+n_sims = 10
+results_corr = vector("list", n_sims)
 for(i in 1:n_sims){
-  random_start = runif(2, -10, 10)
-  results[[i]] = calculateTrajectory(G_corr, W_bar, start_position = random_start, scale = 10)
+  random_start = runif(2, -space_size, space_size)
+  results_corr[[i]] = calculateTrajectory(G_corr, W_bar_multi, start_position = random_start, scale = 2)
 }
 
-mypalette = colorRampPalette(c(wes_palette(10, name = "Zissou1", type = "continuous"), "darkred"))(n_sims)
-
-plot(results[[1]]$trajectory, xlim = c(-10, 10), ylim = c(-10, 10))
-for(i in 2:n_sims){
-  points(results[[i]]$trajectory, col=mypalette[i])  
+plotW_bar(W_bar_multi)
+for(i in 1:n_sims){
+  points(results_corr[[i]]$trajectory-2, col=mypalette[i])  
 }
 
-plotDzgmax_normdz = function(results){
-  dz_gmax = sapply(results, function(x) vector_cor(x$net_dz, gmax_corr))
-  norm_dz = sapply(results, function(x) Norm(x$net_dz))
-  plot(dz_gmax, norm_dz, pch = 19, 
-       xlab = expression(paste("Vector correlation between ", Delta,"z and ",g[max])),
-       ylab = expression(paste("||", Delta,"z||")))
-}
+
+plotDzgmax_normdz(results_corr, gmax_corr)
+plotDzgmax_normdz(results_diag, gmax_diag)
