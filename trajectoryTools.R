@@ -5,6 +5,7 @@ if(!require(ellipse)) { install.packages("ellipse"); library(ellipse) }
 if(!require(grDevices)) { install.packages("grDevices"); library(grDevices) }
 if(!require(wesanderson)) { install.packages("wesanderson"); library(wesanderson) }
 if(!require(evolqg)){install.packages("evolqg"); library(evolqg)}
+if(!require(purrr)){install.packages("purrr"); library(purrr)}
 
 mypalette = colorRampPalette(c(wes_palette(10, name = "Zissou1", type = "continuous"), "darkred"))(n_sims)
 
@@ -66,9 +67,7 @@ plotW_bar = function(W_bar, step = 0.2){
   }
   Z = exp(Z - log(sum(exp(Z))))
   b <- matrix(Z, length(x))
-  
   mypalette = colorRampPalette(c("white", wes_palette(10, name = "Zissou1", type = "continuous"), "darkred"))
-  
   filled.contour(x, y, z = b, color.palette = mypalette, xlim = c(-space_size, space_size), ylim = c(-space_size, space_size),
                  plot.axes = {
                    axis(1, at = seq(-10, 10));
