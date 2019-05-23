@@ -16,6 +16,7 @@ plotW_bar(W_bar_multi)
 W_bar_single = function(x) {
   log(dmvnorm(x, mean = c(3, 3), sigma = w_cov))
 }
+plotW_bar(W_bar_single)
 
 G_corr = matrix(c(1.1, 0.8,
              0.8, 1.0), ncol = 2)
@@ -26,13 +27,14 @@ G_diag = matrix(c(1.1, 0.0,
 gmax_diag = eigen(G_diag)$vectors[,1]
 
 
-n_sims = 30
+n_sims = 10
 results_corr = vector("list", n_sims)
 for(i in 1:n_sims){
   random_start = runif(2, -space_size, space_size)
   results_corr[[i]] = calculateTrajectory(G_corr, W_bar_multi, start_position = random_start, scale = 2)
 }
 map(results_corr, function(x) x$trajectory[dim(x$trajectory)[1],])
+map(results_corr, function(x) x$net_dz)
 
 plotDzgmax_normdz(results_corr, gmax_corr)
 plotDzgmax_normdz(results_diag, gmax_diag)

@@ -7,11 +7,11 @@ if(!require(wesanderson)) { install.packages("wesanderson"); library(wesanderson
 if(!require(evolqg)){install.packages("evolqg"); library(evolqg)}
 if(!require(purrr)){install.packages("purrr"); library(purrr)}
 
-mypalette = colorRampPalette(c(wes_palette(10, name = "Zissou1", type = "continuous"), "darkred"))(n_sims)
+mypalette = colorRampPalette(c(wes_palette(10, name = "Zissou1", type = "continuous"), "darkred"))(50)
 
-diff_cut_off = 1e-4
+diff_cut_off = 1e-5
 max_gens = 1000
-max_stand_still = 100
+max_stand_still = 10
 space_size = 10
 
 vector_cor = function(x, y) abs(Normalize(x) %*% Normalize(y))
@@ -34,14 +34,14 @@ calculateTrajectory <- function (G, W_bar, omega = diag(dim(G)[1]), start_positi
       stand_still_counter = stand_still_counter + 1
     }
     if(stand_still_counter > max_stand_still){
-      trajectory = unique(trajectory[!is.na(trajectory[,1]),])
-      betas = betas[!is.na(betas[,1]),]
       break
     }
-    net_dz = trajectory[dim(trajectory)[1],] - start_position
     current_position = next_position
     gen = gen+1
   }
+  trajectory = unique(trajectory[!is.na(trajectory[,1]),])
+  betas = betas[!is.na(betas[,1]),]
+  net_dz = trajectory[dim(trajectory)[1],] - start_position
   return(list(start_position = start_position,
               trajectory = trajectory, 
               betas = betas, 
