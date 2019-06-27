@@ -21,14 +21,20 @@ W_bar_factory = function(theta_matrix, w_cov = diag(dim(theta_matrix)[2])) {
   function(x) logSumExp(apply(theta_matrix, 1, function(theta) dmvnorm(x, mean = theta, w_cov, log = T)))
 }
 
-#start_position = rep(0, 10)
-#G = G_corr
-#W_bar = W_bar_multi
-#W_bar(start_position)
-#grad(W_bar, start_position)
-#omega = diag(dim(G)[1])
-#scale = 6
-calculateTrajectory <- function (start_position, G, W_bar, omega = diag(dim(G)[1]), scale = 2) {
+W_bar_gradient_factory = function(theta_matrix, w_cov = diag(dim(theta_matrix)[2])){
+  function(x) rowSums(apply(theta_matrix, 1, function(theta) - dmvnorm(x, mean = theta, w_cov) * solve(w_cov, x - theta)))/exp(W_bar_factory(theta_matrix, w_cov)(x))
+}
+
+start_position = rep(0, 4)
+G = G_corr
+W_bar = W_bar_multi
+W_bar_gradient = W_bar_multi_grad
+W_bar(start_position)
+grad(W_bar, start_position)
+W_bar_multi_grad(start_position)
+omega = diag(dim(G)[1])
+scale = 6
+calculateTrajectory <- function (start_position, G, W_bar, W_bar_gradient, omega = diag(dim(G)[1]), scale = 2) {
   p = dim(G)[1]
   trajectory = matrix(NA, max_gens, p)
   betas = matrix(NA, max_gens, p)
@@ -38,7 +44,7 @@ calculateTrajectory <- function (start_position, G, W_bar, omega = diag(dim(G)[1
   gen = 1
   while(gen <= max_gens){
     trajectory[gen,] = current_position
-    beta = grad(W_bar, t(current_position))
+    beta = W_bar_gradient(as.vector(current_position))
     betas[gen,] = beta
     net_beta = net_beta + beta
     next_position = current_position + (G/scale)%*%beta
