@@ -10,30 +10,30 @@ if(!require(matrixStats)){install.packages("matrixStats"); library(matrixStats)}
 
 mypalette = colorRampPalette(c(wes_palette(10, name = "Zissou1", type = "continuous"), "darkred"))(50)
 
-diff_cut_off = 1e-5
-max_gens = 1000
-max_stand_still = 10
-space_size = 10
-
 vector_cor = function(x, y) abs(sum(Normalize(x) * Normalize(y)))
 
 W_bar_factory = function(theta_matrix, w_cov = diag(dim(theta_matrix)[2])) {
   function(x) logSumExp(apply(theta_matrix, 1, function(theta) dmvnorm(x, mean = theta, w_cov, log = T)))
 }
 
-W_bar_gradient_factory = function(theta_matrix, w_cov = diag(dim(theta_matrix)[2])){
+W_bar_gradient_factory = function(theta_matrix, w_cov = NULL){
+    if(is.null(w_cov)){
+  function(x) rowSums(apply(theta_matrix, 1, function(theta) - dmvnorm(x, mean = theta) * t(x - theta)))/exp(W_bar_factory(theta_matrix)(x))
+    } else{
   function(x) rowSums(apply(theta_matrix, 1, function(theta) - dmvnorm(x, mean = theta, w_cov) * solve(w_cov, x - theta)))/exp(W_bar_factory(theta_matrix, w_cov)(x))
+    }
 }
 
-start_position = rep(0, 4)
-G = G_corr
-W_bar = W_bar_multi
-W_bar_gradient = W_bar_multi_grad
-W_bar(start_position)
-grad(W_bar, start_position)
-W_bar_multi_grad(start_position)
-omega = diag(dim(G)[1])
-scale = 6
+#start_position = rep(0, 6)
+#G = G_corr
+#W_bar = W_bar_single
+#W_bar_single_grad = W_bar_gradient_factory(theta_single)
+#W_bar_gradient = W_bar_single_grad
+#W_bar(start_position)
+#grad(W_bar, start_position)
+#W_bar_gradient(as.vector(start_position))
+#omega = diag(dim(G)[1])
+#scale = 6
 calculateTrajectory <- function (start_position, G, W_bar, W_bar_gradient, omega = diag(dim(G)[1]), scale = 2) {
   p = dim(G)[1]
   trajectory = matrix(NA, max_gens, p)
