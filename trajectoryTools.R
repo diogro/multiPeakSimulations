@@ -67,12 +67,12 @@ calculateTrajectory <- function (start_position, G, W_bar, W_bar_gradient, omega
               net_dz = net_dz))
 }
 
-plotDzgmax_normdz = function(results, gmax){
-  dz_gmax = sapply(results, function(x) vector_cor(x$net_dz, gmax))
+plotDzgmax_normdz = function(results, ...){
+  dz_gmax = sapply(results, function(x) vector_cor(x$net_dz, x$gmax))
   norm_dz = sapply(results, function(x) Norm(x$net_dz))
   plot(dz_gmax, norm_dz, pch = 19, 
        xlab = expression(paste("Vector correlation between ", Delta,"z and ",g[max])),
-       ylab = expression(paste("||", Delta,"z||")))
+       ylab = expression(paste("||", Delta,"z||")), ...)
 }
 
 plotW_bar = function(W_bar, step = 0.2){
