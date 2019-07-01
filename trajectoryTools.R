@@ -24,7 +24,7 @@ W_bar_gradient_factory = function(theta_matrix, w_cov = NULL){
     }
 }
 
-#start_position = rep(0, 6)
+#start_position = rep(0, n_traits)
 #G = G_corr
 #W_bar = W_bar_single
 #W_bar_single_grad = W_bar_gradient_factory(theta_single)
@@ -32,9 +32,8 @@ W_bar_gradient_factory = function(theta_matrix, w_cov = NULL){
 #W_bar(start_position)
 #grad(W_bar, start_position)
 #W_bar_gradient(as.vector(start_position))
-#omega = diag(dim(G)[1])
 #scale = 6
-calculateTrajectory <- function (start_position, G, W_bar, W_bar_gradient, omega = diag(dim(G)[1]), scale = 2) {
+calculateTrajectory <- function (start_position, G, W_bar, W_bar_grad, scale = 2) {
   p = dim(G)[1]
   trajectory = matrix(NA, max_gens, p)
   betas = matrix(NA, max_gens, p)
@@ -44,7 +43,7 @@ calculateTrajectory <- function (start_position, G, W_bar, W_bar_gradient, omega
   gen = 1
   while(gen <= max_gens){
     trajectory[gen,] = current_position
-    beta = W_bar_gradient(as.vector(current_position))
+    beta = W_bar_grad(as.vector(current_position))
     betas[gen,] = beta
     net_beta = net_beta + beta
     next_position = current_position + (G/scale)%*%beta

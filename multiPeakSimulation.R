@@ -9,13 +9,17 @@ if(!require(doMC)){install.packages("doMC"); library(doMC)}
 registerDoMC(parallel::detectCores())
 
 n_peaks = 200
-n_traits = 4
+n_traits = 8
 
-rho = 0.8
-G_corr = matrix(rnorm(n_traits*n_traits, rho, 0.05), n_traits, n_traits)
-G_corr = (G_corr + t(G_corr))/2
-diag(G_corr) = rnorm(n_traits, 1, 0.1)
-gmax_corr = eigen(G_corr)$vectors[,1]
+rho = 0.7
+while(TRUE){
+    G_corr = matrix(rnorm(n_traits*n_traits, rho, 0.05), n_traits, n_traits)
+    G_corr = (G_corr + t(G_corr))/2
+    diag(G_corr) = rnorm(n_traits, 1, 0.1)
+    tryCatch({chol(G_corr); break}, error = function(x) FALSE)
+}
+chol(G_corr)
+eigen(G_corr)
 
 G_diag = diag(n_traits)
 diag(G_diag) = rnorm(n_traits, 1, 0.1)
@@ -31,6 +35,10 @@ W_bar_single = W_bar_factory(theta_single)
 W_bar_single_grad = W_bar_gradient_factory(theta_single)
 #plotW_bar(W_bar_single)
 
+G = G_corr
+p = n_traits
+n_peaks = 20
+scale = 6
 runSimulation = function(G_type = c("Diagonal", "Integrated"), G = NULL,
                          n_peaks = 1, p, rho = 0.7, scale = 6){
     if(is.null(G)){
@@ -54,7 +62,7 @@ runSimulation = function(G_type = c("Diagonal", "Integrated"), G = NULL,
     theta = matrix(runif(p*n_peaks, -8, 8), n_peaks, p, byrow = T)
     W_bar = W_bar_factory(theta)
     W_bar_grad = W_bar_gradient_factory(theta)
-    trajectory = calculateTrajectory(rep(0, p), G, W_bar, W_bar_grad, scale)
+    trajectory = calculateTrajectory(rep(0, p), G, W_bar, W_bar_grad, scale = scale)
     trajectory$G_type = G_type
     trajectory$G = G
     trajectory$gmax = gmax
@@ -65,31 +73,15 @@ runSimulation = function(G_type = c("Diagonal", "Integrated"), G = NULL,
     trajectory$Surface_type = Surface_type
     return(trajectory)
 }
-runSimulation("Integrated", NULL, 100, 8, scale = 10)
+runSimulation("Integrated", NULL, 10, 2, scale = 10)
 
-
-results_G_diag_W_single = rlply(1000, runSimulation("Diagonal", G_diag, 1, n_traits), .progress = "text")
-results_G_corr_W_single = rlply(1000, runSimulation("Integrated", G_corr, 1, n_traits), .progress = "text")
-results_G_diag_W_multi = rlply(1000, runSimulation("Diag", G_diag, 50, n_traits), .progress = "text")
-results_G_corr_W_multi = rlply(1000, runSimulation("Integrated", G_corr, 50, n_traits), .progress = "text")
-
-n_sims = 1000
-random_start = matrix(runif(n_traits*n_sims, -space_size, space_size),
-                      n_sims, n_traits, byrow = T)
-results_G_diag_W_single = alply(random_start, 1, calculateTrajectory, G_diag, W_bar_single, W_bar_single_grad, scale = 6, .progress = "text")
-results_G_corr_W_single = alply(random_start, 1, calculateTrajectory, G_corr, W_bar_single, W_bar_single_grad, scale = 6, .progress = "text")
-results_G_diag_W_multi  = alply(random_start, 1, calculateTrajectory, G_diag, W_bar_multi,  W_bar_multi_grad,  scale = 6, .progress = "text")
-results_G_corr_W_multi  = alply(random_start, 1, calculateTrajectory, G_corr, W_bar_multi,  W_bar_multi_grad,  scale = 6, .progress = "text")
-
-
-plot(laply(results_G_diag_W_single, function(x) x$trajectory[dim(x$trajectory)[1],]))
-plot(laply(results_G_corr_W_single$trajectory, function(x) x$trajectory[dim(x$trajectory)[1],]))
-plot(laply(results_G_diag_W_multi , function(x) x$trajectory[dim(x$trajectory)[1],]))
-plot(laply(results_G_corr_W_multi , function(x) x$trajectory[dim(x$trajectory)[1],]))
-
+results_G_diag_W_single = rlply(1000, runSimulation("Diagonal"  , G_diag, 1 , n_traits, scale = 2), .parallel = TRUE)
+results_G_corr_W_single = rlply(1000, runSimulation("Integrated", G_corr, 1 , n_traits, scale = 4), .parallel = TRUE)
+results_G_diag_W_multi  = rlply(1000, runSimulation("Diag"      , G_diag, 200, n_traits, scale = 2), .parallel = TRUE)
+results_G_corr_W_multi  = rlply(1000, runSimulation("Integrated", G_corr, 200, n_traits, scale = 6), .parallel = TRUE)
 
 par(mfrow=c(2, 2))
 plotDzgmax_normdz(results_G_diag_W_single, ylim = c(0, 30), main = "Diagonal G - Single Peak")
 plotDzgmax_normdz(results_G_corr_W_single, ylim = c(0, 30), main = "Integrated G - Single Peak")
-plotDzgmax_normdz(results_G_diag_W_multi , ylim = c(0, 30), main = "Diagonal G - Multiple Peak")
-plotDzgmax_normdz(results_G_corr_W_multi , ylim = c(0, 30), main = "Correlated G - Multiple Peak")
+plotDzgmax_normdz(results_G_diag_W_multi , ylim = c(0, 30), main = "Diagonal G - Multiple Peaks")
+plotDzgmax_normdz(results_G_corr_W_multi , ylim = c(0, 30), main = "Correlated G - Multiple Peaks")
