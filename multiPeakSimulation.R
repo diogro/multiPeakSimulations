@@ -21,9 +21,13 @@ while(TRUE){
 chol(G_corr)
 eigen(G_corr)
 
-G_diag = diag(n_traits)
-diag(G_diag) = rnorm(n_traits, 1, 0.1)
-gmax_diag = eigen(G_diag)$vectors[,1]
+rho = 0
+while(TRUE){
+    G_diag = matrix(rnorm(n_traits*n_traits, rho, 0.05), n_traits, n_traits)
+    G_diag = (G_diag + t(G_diag))/2
+    diag(G_diag) = rnorm(n_traits, 1, 0.1)
+    tryCatch({chol(G_diag); break}, error = function(x) FALSE)
+}
 
 random_peaks = matrix(runif(n_traits*n_peaks, -8, 8), n_peaks, n_traits, byrow = T)
 W_bar_multi = W_bar_factory(random_peaks)
@@ -76,12 +80,12 @@ runSimulation = function(G_type = c("Diagonal", "Integrated"), G = NULL,
 runSimulation("Integrated", G_corr, n_peaks = 2, n_traits, scale = 10)
 
 results_G_diag_W_single = llply(1:1000, function(x) runSimulation("Diag", G_diag,   1, n_traits, scale = 2), .parallel = TRUE)
-results_G_corr_W_single = llply(1:1000, function(x) runSimulation("Inte", G_corr,   1, n_traits, scale = 4), .progress = "text")
+results_G_corr_W_single = llply(1:1000, function(x) runSimulation("Inte", G_corr,   1, n_traits, scale = 4), .parallel = TRUE)
 results_G_diag_W_multi  = llply(1:1000, function(x) runSimulation("Diag", G_diag, 200, n_traits, scale = 2), .parallel = TRUE)
-results_G_corr_W_multi  = llply(1:1000, function(x) runSimulation("Inte", G_corr, 200, n_traits, scale = 6), .progress = "text")
+results_G_corr_W_multi  = llply(1:1000, function(x) runSimulation("Inte", G_corr, 200, n_traits, scale = 6), .parallel = TRUE)
 
 par(mfrow=c(2, 2))
-plotDzgmax_normdz(results_G_diag_W_single, ylim = c(0, 30), main = "Diagonal G - Single Peak")
-plotDzgmax_normdz(results_G_corr_W_single, ylim = c(0, 30), main = "Integrated G - Single Peak")
-plotDzgmax_normdz(results_G_diag_W_multi , ylim = c(0, 30), main = "Diagonal G - Multiple Peaks")
-plotDzgmax_normdz(results_G_corr_W_multi , ylim = c(0, 30), main = "Correlated G - Multiple Peaks")
+plotDzgmax_normdz(results_G_diag_W_single, xlim = c(0, 1), ylim = c(0, 30), main = "Diagonal G - Single Peak")
+plotDzgmax_normdz(results_G_corr_W_single, xlim = c(0, 1), ylim = c(0, 30), main = "Integrated G - Single Peak")
+plotDzgmax_normdz(results_G_diag_W_multi , xlim = c(0, 1), ylim = c(0, 30), main = "Diagonal G - Multiple Peaks")
+plotDzgmax_normdz(results_G_corr_W_multi , xlim = c(0, 1), ylim = c(0, 30), main = "Correlated G - Multiple Peaks")
