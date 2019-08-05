@@ -7,10 +7,11 @@ if(!require(wesanderson)) { install.packages("wesanderson"); library(wesanderson
 if(!require(evolqg)){install.packages("evolqg"); library(evolqg)}
 if(!require(purrr)){install.packages("purrr"); library(purrr)}
 if(!require(matrixStats)){install.packages("matrixStats"); library(matrixStats)}
+if(!require(tictoc)){install.packages("tictoc"); library(tictoc)}
 
 mypalette = colorRampPalette(c(wes_palette(10, name = "Zissou1", type = "continuous"), "darkred"))(50)
 
-vector_cor = function(x, y) abs(sum(Normalize(x) * Normalize(y)))
+vector_cor = function(x, y) abs(x %*% y/(Norm(x)*Norm(y)))
 
 W_bar_factory = function(theta_matrix, w_cov = diag(dim(theta_matrix)[2])) {
   function(x) logSumExp(apply(theta_matrix, 1, function(theta) dmvnorm(x, mean = theta, w_cov, log = T)))
@@ -22,6 +23,30 @@ W_bar_gradient_factory = function(theta_matrix, w_cov = NULL){
     } else{
   function(x) rowSums(apply(theta_matrix, 1, function(theta) - dmvnorm(x, mean = theta, w_cov) * solve(w_cov, x - theta)))/exp(W_bar_factory(theta_matrix, w_cov)(x))
     }
+}
+
+randomPeaks = function(n = n_peaks, p = n_traits, x = rep(1, p), steps = 10){
+  counter = vector("numeric", steps)
+  n_per = n/steps
+  corr_step = 1/steps
+  peaks = matrix(0, n, p)
+  k = 1
+  while(k <= n){
+    rpeak = Normalize(rnorm(p))
+    corr = vector_cor(x, rpeak)
+    for(i in 1:steps) {
+      if(corr < i*corr_step){
+        if(counter[i] < n_per){
+          counter[i] = counter[i] + 1
+          peaks[k,] = rpeak * runif(1, 1, space_size)
+          k = k + 1
+          break
+        }
+        break
+      }
+    }
+  }
+  peaks[sample(1:n, n),]
 }
 
 #start_position = rep(0, n_traits)
