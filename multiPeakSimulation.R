@@ -8,7 +8,7 @@ source("./trajectoryTools.R")
 if(!require(doMC)){install.packages("doMC"); library(doMC)}
 registerDoMC(parallel::detectCores()-2)
 
-n_peaks = 200
+n_peaks = 20
 n_traits = 8
 
 rho = 0.9
@@ -25,11 +25,12 @@ peakPool_G_corr = randomPeaks(10000, x = eigen(G_corr)$vector[,1], steps = 20)
 
 rho = 0
 while(TRUE){
-    G_diag = matrix(rnorm(n_traits*n_traits, rho, 0.05), n_traits, n_traits)
+    G_diag = matrix(rnorm(n_traits*n_traits, rho, 0.01), n_traits, n_traits)
     G_diag = (G_diag + t(G_diag))/2
     diag(G_diag) = rnorm(n_traits, 1, 0.1)
     tryCatch({chol(G_diag); break}, error = function(x) FALSE)
 }
+eigen(G_diag)
 peakPool_G_diag = randomPeaks(10000, x = eigen(G_diag)$vector[,1], steps = 20)
 
 # random_peaks = matrix(runif(n_traits*n_peaks, -8, 8), n_peaks, n_traits, byrow = T)
@@ -86,23 +87,23 @@ runSimulation("Integrated", G_corr, n_peaks = 100, n_traits, scale = 10, peakPoo
 
 
 tic()
-results_G_diag_W_single = llply(1:1000, function(x) runSimulation("Diag", G_diag,   1, n_traits, 
+results_G_diag_W_single = llply(1:4000, function(x) runSimulation("Diag", G_diag,   1, n_traits, 
                                                                  scale = 2, 
                                                                  peakPool = peakPool_G_diag), 
                                 .parallel = TRUE)
-results_G_corr_W_single = llply(1:1000, function(x) runSimulation("Inte", G_corr,   1, n_traits, 
+results_G_corr_W_single = llply(1:4000, function(x) runSimulation("Inte", G_corr,   1, n_traits, 
                                                                  scale = 4, 
                                                                  peakPool = peakPool_G_corr), 
                                 .parallel = TRUE)
-results_G_diag_W_multi  = llply(1:1000, function(x) runSimulation("Diag", G_diag, 200, n_traits, 
+results_G_diag_W_multi  = llply(1:4000, function(x) runSimulation("Diag", G_diag, 20, n_traits, 
                                                                  scale = 2, 
                                                                  peakPool = peakPool_G_diag), 
                                 .parallel = TRUE)
-results_G_corr_W_multi  = llply(1:1000, function(x) runSimulation("Inte", G_corr, 200, n_traits, 
+results_G_corr_W_multi  = llply(1:1000, function(x) runSimulation("Inte", G_corr, 20, n_traits, 
                                                                  scale = 6, 
                                                                  peakPool = peakPool_G_corr), 
                                 .parallel = TRUE)
-toc()
+ toc()
 
 save(results_G_diag_W_single,
      results_G_corr_W_single,
@@ -110,10 +111,10 @@ save(results_G_diag_W_single,
      results_G_corr_W_multi, file = "results.Rdata")
 
 par(mfrow=c(2, 2))
-plotDzgmax_normdz(results_G_diag_W_single, xlim = c(0, 1), ylim = c(0, 20), main = "Diagonal G - Single Peak")
-plotDzgmax_normdz(results_G_corr_W_single, xlim = c(0, 1), ylim = c(0, 20), main = "Integrated G - Single Peak")
-plotDzgmax_normdz(results_G_diag_W_multi , xlim = c(0, 1), ylim = c(0, 20), main = "Diagonal G - Multiple Peaks")
-plotDzgmax_normdz(results_G_corr_W_multi , xlim = c(0, 1), ylim = c(0, 20), main = "Correlated G - Multiple Peaks")
+plotDzgmax_normdz(results_G_diag_W_single, xlim = c(0, 1), ylim = c(0, 10), main = "Diagonal G - Single Peak")
+plotDzgmax_normdz(results_G_corr_W_single, xlim = c(0, 1), ylim = c(0, 10), main = "Integrated G - Single Peak")
+plotDzgmax_normdz(results_G_diag_W_multi , xlim = c(0, 1), ylim = c(0, 10), main = "Diagonal G - Multiple Peaks")
+plotDzgmax_normdz(results_G_corr_W_multi , xlim = c(0, 1), ylim = c(0, 10), main = "Correlated G - Multiple Peaks")
 
 
 peakPool = 
