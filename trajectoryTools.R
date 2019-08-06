@@ -25,7 +25,7 @@ W_bar_gradient_factory = function(theta_matrix, w_cov = NULL){
     }
 }
 
-randomPeaks = function(n = n_peaks, p = n_traits, x = rep(1, p), steps = 10){
+randomPeaks = function(n = n_peaks, p = n_traits, x = rep(1, p), steps = 10, minimum, maximum){
   counter = vector("numeric", steps)
   n_per = n/steps
   corr_step = 1/steps
@@ -38,7 +38,7 @@ randomPeaks = function(n = n_peaks, p = n_traits, x = rep(1, p), steps = 10){
       if(corr < i*corr_step){
         if(counter[i] < n_per){
           counter[i] = counter[i] + 1
-          peaks[k,] = rpeak * runif(1, 1, space_size)
+          peaks[k,] = rpeak * runif(1, minimum, maximum)
           k = k + 1
           break
         }
