@@ -25,20 +25,25 @@ W_bar_gradient_factory = function(theta_matrix, w_cov = NULL){
     }
 }
 
-randomPeaks = function(n = n_peaks, p = n_traits, x = rep(1, p), steps = 10, minimum, maximum){
+intervals =  c(0.8, 0.9, 1)
+prop = c(0.9, 0.05, 0.05)
+n = 1000
+p = 8
+dz_limits = c(0, 1)
+randomPeaks = function(n = n_peaks, p = n_traits, x = rep(1, p), intervals, prop, dz_limits){
+  steps = length(intervals)
   counter = vector("numeric", steps)
-  n_per = n/steps
-  corr_step = 1/steps
+  n_per = n * prop
   peaks = matrix(0, n, p)
   k = 1
   while(k <= n){
     rpeak = Normalize(rnorm(p))
     corr = vector_cor(x, rpeak)
     for(i in 1:steps) {
-      if(corr < i*corr_step){
-        if(counter[i] < n_per){
+      if(corr < intervals[i]){
+        if(counter[i] < n_per[i]){
           counter[i] = counter[i] + 1
-          peaks[k,] = rpeak * runif(1, minimum, maximum)
+          peaks[k,] = rpeak * runif(1, dz_limits[1], dz_limits[2])
           k = k + 1
           break
         }
@@ -48,7 +53,8 @@ randomPeaks = function(n = n_peaks, p = n_traits, x = rep(1, p), steps = 10, min
   }
   peaks[sample(1:n, n),]
 }
-
+peaks = randomPeaks(5000, 8, intervals = c(0.7, 0.8, 1), prop = c(0.9, 0.06, 0.04), dz_lim = c(3, 6))
+hist(sort(apply(peaks, 1, vector_cor, rep(1, 8))), breaks = 50)
 #start_position = rep(0, n_traits)
 #G = G_corr
 #W_bar = W_bar_single
