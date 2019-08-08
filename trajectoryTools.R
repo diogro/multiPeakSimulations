@@ -8,6 +8,7 @@ if(!require(evolqg)){install.packages("evolqg"); library(evolqg)}
 if(!require(purrr)){install.packages("purrr"); library(purrr)}
 if(!require(matrixStats)){install.packages("matrixStats"); library(matrixStats)}
 if(!require(tictoc)){install.packages("tictoc"); library(tictoc)}
+if(!require(NCmisc)){install.packages("NCmisc"); library(NCmisc)}
 
 mypalette = colorRampPalette(c(wes_palette(10, name = "Zissou1", type = "continuous"), "darkred"))(50)
 
@@ -78,6 +79,7 @@ calculateTrajectory <- function (start_position, G, W_bar, W_bar_grad, scale = 2
     betas[gen,] = beta
     net_beta = net_beta + beta
     next_position = current_position + (G/scale)%*%beta
+    if(Norm(next_position) > space_size*2) stop("Out of bounds")
     if(Norm(next_position - current_position) < diff_cut_off){
       stand_still_counter = stand_still_counter + 1
     }
