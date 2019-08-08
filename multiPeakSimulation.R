@@ -9,7 +9,7 @@ if(!require(doMC)){install.packages("doMC"); library(doMC)}
 registerDoMC(32)
 
 n_peaks = 20
-n_traits = 8
+n_traits = 2
 
 rho = 0.9
 while(TRUE){
@@ -21,7 +21,7 @@ while(TRUE){
 chol(G_corr)
 eigen(G_corr)
 peakPool_G_corr = randomPeaks(10000, x = eigen(G_corr)$vector[,1], intervals = c(0.7, 0.8, 1), prop = c(0.9, 0.06, 0.04), dz_lim = c(2, 6))
-#peakPool_G_corr = randomPeaks(10000, x = eigen(G_corr)$vector[,1], intervals = c(1), prop = c(1), dz_lim = c(2, 6))
+peakPool_G_corr = randomPeaks(10000, x = eigen(G_corr)$vector[,1], intervals = c(1), prop = c(1), dz_lim = c(2, 6))
 hist(sort(apply(peakPool_G_corr, 1, vector_cor, eigen(G_corr)$vector[,1])), breaks = 50)
 
 rho = 0.01
@@ -33,7 +33,7 @@ while(TRUE){
 }
 eigen(G_diag)
 peakPool_G_diag = randomPeaks(10000, x = eigen(G_diag)$vector[,1], intervals = c(0.7, 0.8, 1), prop = c(0.9, 0.06, 0.04), dz_lim = c(2, 6))
-#peakPool_G_diag = randomPeaks(10000, x = eigen(G_diag)$vector[,1], intervals = c(1), prop = c(1), dz_lim = c(2, 6))
+peakPool_G_diag = randomPeaks(10000, x = eigen(G_diag)$vector[,1], intervals = c(1), prop = c(1), dz_lim = c(2, 6))
 hist(sort(apply(peakPool_G_diag, 1, vector_cor, eigen(G_diag)$vector[,1])), breaks = 50)
 summary(apply(peakPool_G_diag, 1, Norm))
 
@@ -82,7 +82,11 @@ runSimulation = function(G_type = c("Diagonal", "Integrated"), G = NULL,
     return(trajectory)
 }
 runSimulation("Integrated", G_corr, n_peaks = 1, n_traits, scale = 4, peakPool = peakPool_G_corr)
-runSimulation("Integrated", G_corr, n_peaks = 50, n_traits, scale = 4, peakPool = peakPool_G_corr)
+x = runSimulation("Integrated", G_corr, n_peaks = 20, n_traits, scale = 4, peakPool = peakPool_G_corr)
+Norm(x$z)
+x$trajectory
+
+plotW_bar_trajectory(x)
 
 tic()
 results_G_diag_W_single = llply(1:1000, function(x) runSimulation("Diag", G_diag,   1, n_traits, 

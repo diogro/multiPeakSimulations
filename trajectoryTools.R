@@ -124,3 +124,12 @@ plotW_bar = function(W_bar, step = 0.2){
                    axis(2, at = seq(-10, 10));
                  })
 }
+
+plotW_bar_trajectory = function(x, xlimits = c(-space_size, space_size), ylimits = c(-space_size, space_size), ...){
+  mypalette = colorRampPalette(c("white", wes_palette(10, name = "Zissou1", type = "continuous"), "darkred"))
+  cf_func(x$W_bar, xlim = xlimits, ylim = ylimits, color.palette = mypalette, 
+          afterplotfunc=function() {
+            points(x$theta, pch = 2)
+            points(x$trajectory, pch = 19)
+          }, ...)
+}
