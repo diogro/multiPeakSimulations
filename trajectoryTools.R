@@ -9,6 +9,7 @@ if(!require(purrr)){install.packages("purrr"); library(purrr)}
 if(!require(matrixStats)){install.packages("matrixStats"); library(matrixStats)}
 if(!require(tictoc)){install.packages("tictoc"); library(tictoc)}
 if(!require(NCmisc)){install.packages("NCmisc"); library(NCmisc)}
+if(!require(ContourFunctions)){install.packages("ContourFunctions"); library(ContourFunctions)}
 
 mypalette = colorRampPalette(c(wes_palette(10, name = "Zissou1", type = "continuous"), "darkred"))(50)
 

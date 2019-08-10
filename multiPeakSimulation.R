@@ -1,6 +1,6 @@
 diff_cut_off = 1e-4
-max_gens = 100000
-max_stand_still = 10
+max_gens = 10000
+max_stand_still = 5
 space_size = 6
 
 source("./trajectoryTools.R")
@@ -134,3 +134,7 @@ peaks = randomPeaks(5000, 8, intervals = c(0.7, 0.8, 1), prop = c(0.9, 0.06, 0.0
 hist(sort(apply(peaks, 1, vector_cor, rep(1, 8))), breaks = 50)
 
 
+x = runSimulation("Integrated", n_peaks = 5, p = 2, scale = 4, 
+                  peakPool = randomPeaks(100, p = 2, dz_limits = c(3, 6), 
+                                         intervals = c(1), prop = c(1)))
+plotW_bar_trajectory(x)
