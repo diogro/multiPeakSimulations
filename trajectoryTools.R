@@ -9,7 +9,7 @@ if(!require(purrr)){install.packages("purrr"); library(purrr)}
 if(!require(matrixStats)){install.packages("matrixStats"); library(matrixStats)}
 if(!require(tictoc)){install.packages("tictoc"); library(tictoc)}
 if(!require(NCmisc)){install.packages("NCmisc"); library(NCmisc)}
-if(!require(ContourFunctions)){install.packages("ContourFunctions"); library(ContourFunctions)}
+if(!require(ContourFunctions)){devtools::install_github("CollinErickson/contour"); library(ContourFunctions)}
 
 mypalette = colorRampPalette(c(wes_palette(10, name = "Zissou1", type = "continuous"), "darkred"))(50)
 
@@ -32,7 +32,7 @@ prop = c(0.9, 0.05, 0.05)
 n = 1000
 p = 8
 dz_limits = c(0, 1)
-randomPeaks = function(n = n_peaks, p = n_traits, x = rep(1, p), intervals, prop, dz_limits){
+randomPeaks = function(n = n_peaks, p = n_traits, x = rep(1, p), intervals = 1, prop = 1, dz_limits){
   steps = length(intervals)
   counter = vector("numeric", steps)
   n_per = n * prop
@@ -55,17 +55,7 @@ randomPeaks = function(n = n_peaks, p = n_traits, x = rep(1, p), intervals, prop
   }
   peaks[sample(1:n, n),]
 }
-peaks = randomPeaks(5000, 8, intervals = c(0.7, 0.8, 1), prop = c(0.9, 0.06, 0.04), dz_lim = c(3, 6))
-hist(sort(apply(peaks, 1, vector_cor, rep(1, 8))), breaks = 50)
-#start_position = rep(0, n_traits)
-#G = G_corr
-#W_bar = W_bar_single
-#W_bar_single_grad = W_bar_gradient_factory(theta_single)
-#W_bar_gradient = W_bar_single_grad
-#W_bar(start_position)
-#grad(W_bar, start_position)
-#W_bar_gradient(as.vector(start_position))
-#scale = 6
+
 calculateTrajectory <- function (start_position, G, W_bar, W_bar_grad, scale = 2) {
   p = dim(G)[1]
   trajectory = matrix(NA, max_gens, p)
@@ -100,6 +90,44 @@ calculateTrajectory <- function (start_position, G, W_bar, W_bar_grad, scale = 2
               net_dz = net_dz))
 }
 
+runSimulation = function(G_type = c("Diagonal", "Integrated"), G = NULL,
+                         n_peaks = 1, p, rho = 0.7, scale = 6, peakPool = NULL, theta = NULL){
+    G_type = match.arg(G_type)
+    if(is.null(G)){
+        if(G_type == "Diagonal"){
+            G = diag(p)
+            diag(G) = rnorm(p, 1, 0.1)
+            gmax = eigen(G)$vectors[,1]
+        } else if(G_type == "Integrated"){
+            while(TRUE){
+                G = matrix(rnorm(n_traits*n_traits, rho, 0.05), n_traits, n_traits)
+                G = (G + t(G))/2
+                diag(G) = rnorm(n_traits, 1, 0.1)
+                tryCatch({chol(G); break}, error = function(x) FALSE)
+            }
+            gmax = eigen(G)$vectors[,1]
+        } else stop("Unknown G type")
+    } else
+        gmax = eigen(G)$vectors[,1]
+    if(n_peaks == 1){
+        Surface_type = "Single"
+    } else
+        Surface_type = "Muliple"
+    if(is.null(theta)) theta = matrix(peakPool[sample(1:nrow(peakPool), n_peaks),], n_peaks, p)
+    W_bar = W_bar_factory(theta)
+    W_bar_grad = W_bar_gradient_factory(theta)
+    trajectory = calculateTrajectory(rep(0, p), G, W_bar, W_bar_grad, scale = scale)
+    trajectory$G_type = G_type
+    trajectory$G = G
+    trajectory$gmax = gmax
+    trajectory$theta = theta
+    trajectory$z = trajectory$trajectory[dim(trajectory$trajectory)[1],]
+    trajectory$W_bar = W_bar
+    trajectory$W_bar_grad = W_bar_grad
+    trajectory$Surface_type = Surface_type
+    return(trajectory)
+}
+
 plotDzgmax_normdz = function(results, ...){
   dz_gmax = sapply(results, function(x) vector_cor(x$net_dz, x$gmax))
   norm_dz = sapply(results, function(x) Norm(x$net_dz))
@@ -108,26 +136,9 @@ plotDzgmax_normdz = function(results, ...){
        ylab = expression(paste("||", Delta,"z||")), ...)
 }
 
-plotW_bar = function(W_bar, step = 0.2){
-  x <- seq(-space_size, space_size, step) ## valores para mu
-  y <- seq(-space_size, space_size, step)
-  X <- as.matrix(expand.grid(x, y))
-  Z <- vector()
-  for(i in 1:nrow(X)){
-    Z[i] <- W_bar(c(X[i,1], X[i,2]))
-  }
-  Z = exp(Z - log(sum(exp(Z))))
-  b <- matrix(Z, length(x))
-  mypalette = colorRampPalette(c("white", wes_palette(10, name = "Zissou1", type = "continuous"), "darkred"))
-  filled.contour(x, y, z = b, color.palette = mypalette, xlim = c(-space_size, space_size), ylim = c(-space_size, space_size),
-                 plot.axes = {
-                   axis(1, at = seq(-10, 10));
-                   axis(2, at = seq(-10, 10));
-                 })
-}
-
-plotW_bar_trajectory = function(x, xlimits = c(-space_size, space_size), ylimits = c(-space_size, space_size), main = "", ...){
-  mypalette = colorRampPalette(c("white", wes_palette(10, name = "Zissou1", type = "continuous"), "darkred"))
+plotW_bar_trajectory = function(x, xlimits = c(-space_size, space_size), ylimits = c(-space_size, space_size),
+                                mypalette = colorRampPalette(wes_palette(name = "Zissou1", type = "continuous")),
+                                main = "", ...){
   cf_func(x$W_bar, xlim = xlimits, ylim = ylimits, color.palette = mypalette, main = main,
           afterplotfunc=function() {
             points(x$theta, pch = 17)
@@ -135,4 +146,25 @@ plotW_bar_trajectory = function(x, xlimits = c(-space_size, space_size), ylimits
             abline(v=0)
             abline(h=0)
           }, ...)
+}
+
+plotW_bar = function(theta, space_size = 6, xlimits = c(-space_size, space_size), ylimits = c(-space_size, space_size), 
+                     mypalette = colorRampPalette(wes_palette(name = "Zissou1", type = "continuous")),
+                     main = "", ...){
+  cf_func(W_bar_factory(theta), xlim = xlimits, ylim = ylimits, color.palette = mypalette, main = main,
+          afterplotfunc=function() {
+            points(theta, pch = 17)
+            abline(v=0)
+            abline(h=0)
+          }, ...)
+}
+
+G_factory = function(p, rho, sigma = 0.1){
+  while(TRUE){
+    G = matrix(rnorm(p*p, rho, sigma), p, p)
+    G = (G + t(G))/2
+    diag(G) = rnorm(p, 1, sigma)
+    tryCatch({chol(G); break}, error = function(x) FALSE)
+  }
+  G
 }

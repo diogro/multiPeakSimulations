@@ -9,87 +9,36 @@ if(!require(doMC)){install.packages("doMC"); library(doMC)}
 registerDoMC(32)
 
 n_peaks = 20
-n_traits = 2
+n_traits = 8
 
-rho = 0.9
-while(TRUE){
-    G_corr = matrix(rnorm(n_traits*n_traits, rho, 0.05), n_traits, n_traits)
-    G_corr = (G_corr + t(G_corr))/2
-    diag(G_corr) = rnorm(n_traits, 1, 0.1)
-    tryCatch({chol(G_corr); break}, error = function(x) FALSE)
-}
-chol(G_corr)
-eigen(G_corr)
+
+#########################
+# G matrices
+#########################
+
+
+G_corr = G_factory(n_traits, rho = 0.9)
+
 peakPool_G_corr = randomPeaks(10000, x = eigen(G_corr)$vector[,1], intervals = c(0.7, 0.8, 1), prop = c(0.9, 0.06, 0.04), dz_lim = c(2, 6))
-peakPool_G_corr = randomPeaks(10000, x = eigen(G_corr)$vector[,1], intervals = c(1), prop = c(1), dz_lim = c(2, 6))
+#peakPool_G_corr = randomPeaks(10000, x = eigen(G_corr)$vector[,1], dz_lim = c(2, 6))
 hist(sort(apply(peakPool_G_corr, 1, vector_cor, eigen(G_corr)$vector[,1])), breaks = 50)
 
-rho = 0.01
-while(TRUE){
-    G_diag = matrix(rnorm(n_traits*n_traits, rho, 0.01), n_traits, n_traits)
-    G_diag = (G_diag + t(G_diag))/2
-    diag(G_diag) = rnorm(n_traits, 1, 0.1)
-    tryCatch({chol(G_diag); break}, error = function(x) FALSE)
-}
-eigen(G_diag)
+G_diag = G_factory(n_traits, rho = 0.1)
+
 peakPool_G_diag = randomPeaks(10000, x = eigen(G_diag)$vector[,1], intervals = c(0.7, 0.8, 1), prop = c(0.9, 0.06, 0.04), dz_lim = c(2, 6))
-peakPool_G_diag = randomPeaks(10000, x = eigen(G_diag)$vector[,1], intervals = c(1), prop = c(1), dz_lim = c(2, 6))
+#peakPool_G_diag = randomPeaks(10000, x = eigen(G_diag)$vector[,1], dz_lim = c(2, 6))
 hist(sort(apply(peakPool_G_diag, 1, vector_cor, eigen(G_diag)$vector[,1])), breaks = 50)
-summary(apply(peakPool_G_diag, 1, Norm))
 
-# random_peaks = matrix(runif(n_traits*n_peaks, -8, 8), n_peaks, n_traits, byrow = T)
-# W_bar_multi = W_bar_factory(random_peaks)
-# W_bar_multi_grad = W_bar_gradient_factory(random_peaks)
-# W_bar_multi_grad = W_bar_gradient_factory(random_peaks)
-# 
-# theta_single = matrix(runif(n_traits, -8, 8), 1, n_traits, byrow = T)
-# W_bar_single = W_bar_factory(theta_single)
-# W_bar_single_grad = W_bar_gradient_factory(theta_single)
-# #plotW_bar(W_bar_single)
+#########################
+# Test runs
+#########################
 
-runSimulation = function(G_type = c("Diagonal", "Integrated"), G = NULL,
-                         n_peaks = 1, p, rho = 0.7, scale = 6, peakPool = NULL, theta = NULL){
-    G_type = match.arg(G_type)
-    if(is.null(G)){
-        if(G_type == "Diagonal"){
-            G = diag(p)
-            diag(G) = rnorm(p, 1, 0.1)
-            gmax = eigen(G)$vectors[,1]
-        } else if(G_type == "Integrated"){
-            while(TRUE){
-                G = matrix(rnorm(n_traits*n_traits, rho, 0.05), n_traits, n_traits)
-                G = (G + t(G))/2
-                diag(G) = rnorm(n_traits, 1, 0.1)
-                tryCatch({chol(G); break}, error = function(x) FALSE)
-            }
-            gmax = eigen(G)$vectors[,1]
-        } else stop("Unknown G type")
-    } else
-        gmax = eigen(G)$vectors[,1]
-    if(n_peaks == 1){
-        Surface_type = "Single"
-    } else
-        Surface_type = "Muliple"
-    if(is.null(theta)) theta = matrix(peakPool[sample(1:nrow(peakPool), n_peaks),], n_peaks, p)
-    W_bar = W_bar_factory(theta)
-    W_bar_grad = W_bar_gradient_factory(theta)
-    trajectory = calculateTrajectory(rep(0, p), G, W_bar, W_bar_grad, scale = scale)
-    trajectory$G_type = G_type
-    trajectory$G = G
-    trajectory$gmax = gmax
-    trajectory$theta = theta
-    trajectory$z = trajectory$trajectory[dim(trajectory$trajectory)[1],]
-    trajectory$W_bar = W_bar
-    trajectory$W_bar_grad = W_bar_grad
-    trajectory$Surface_type = Surface_type
-    return(trajectory)
-}
 runSimulation("Integrated", G_corr, n_peaks = 1, n_traits, scale = 4, peakPool = peakPool_G_corr)
-x = runSimulation("Integrated", G_corr, n_peaks = 20, n_traits, scale = 4, peakPool = peakPool_G_corr)
-Norm(x$z)
-x$trajectory
+runSimulation("Integrated", G_corr, n_peaks = 20, n_traits, scale = 4, peakPool = peakPool_G_corr)
 
-plotW_bar_trajectory(x)
+#########################
+# Simulations
+#########################
 
 tic()
 results_G_diag_W_single = llply(1:1000, function(x) runSimulation("Diag", G_diag,   1, n_traits, 

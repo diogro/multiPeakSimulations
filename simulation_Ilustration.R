@@ -31,7 +31,6 @@ abline(h=0)
 
 
 
-
 peakPool = 
 plot(apply(peakPool[sample(1:10000, 200),], 1, function(x) vector_cor(x, rep(1, 8))))
 hist((apply(peakPool_G_diag, 1, Norm)))
@@ -43,6 +42,7 @@ hist(sort(apply(peaks, 1, vector_cor, rep(1, 8))), breaks = 50)
 peakPool = randomPeaks(100, p = 2, dz_limits = c(3, 6), 
                                          intervals = c(1), prop = c(1))
 theta = matrix(peakPool[sample(1:nrow(peakPool), 5),], 5, p)
+plotW_bar(theta, mypalette = colorRampPalette(wes_palette(name = "Zissou1", type = "continuous")))
 x = runSimulation("Integrated", rho = 0.9, n_peaks = 5, p = 2, scale = 4, theta = theta)
 plotW_bar_trajectory(x)
 x = runSimulation("Diagonal", n_peaks = 5, p = 2, scale = 4, theta = theta)
