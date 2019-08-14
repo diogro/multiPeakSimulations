@@ -126,11 +126,13 @@ plotW_bar = function(W_bar, step = 0.2){
                  })
 }
 
-plotW_bar_trajectory = function(x, xlimits = c(-space_size, space_size), ylimits = c(-space_size, space_size), ...){
+plotW_bar_trajectory = function(x, xlimits = c(-space_size, space_size), ylimits = c(-space_size, space_size), main = "", ...){
   mypalette = colorRampPalette(c("white", wes_palette(10, name = "Zissou1", type = "continuous"), "darkred"))
-  cf_func(x$W_bar, xlim = xlimits, ylim = ylimits, color.palette = mypalette, 
+  cf_func(x$W_bar, xlim = xlimits, ylim = ylimits, color.palette = mypalette, main = main,
           afterplotfunc=function() {
-            points(x$theta, pch = 2)
+            points(x$theta, pch = 17)
             points(x$trajectory, pch = 19)
+            abline(v=0)
+            abline(h=0)
           }, ...)
 }

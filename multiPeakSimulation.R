@@ -48,7 +48,7 @@ summary(apply(peakPool_G_diag, 1, Norm))
 # #plotW_bar(W_bar_single)
 
 runSimulation = function(G_type = c("Diagonal", "Integrated"), G = NULL,
-                         n_peaks = 1, p, rho = 0.7, scale = 6, peakPool){
+                         n_peaks = 1, p, rho = 0.7, scale = 6, peakPool = NULL, theta = NULL){
     G_type = match.arg(G_type)
     if(is.null(G)){
         if(G_type == "Diagonal"){
@@ -56,9 +56,12 @@ runSimulation = function(G_type = c("Diagonal", "Integrated"), G = NULL,
             diag(G) = rnorm(p, 1, 0.1)
             gmax = eigen(G)$vectors[,1]
         } else if(G_type == "Integrated"){
-            G = matrix(rnorm(p*p, rho, 0.05), p, p)
-            G = (G + t(G))/2
-            diag(G) = rnorm(p, 1, 0.1)
+            while(TRUE){
+                G = matrix(rnorm(n_traits*n_traits, rho, 0.05), n_traits, n_traits)
+                G = (G + t(G))/2
+                diag(G) = rnorm(n_traits, 1, 0.1)
+                tryCatch({chol(G); break}, error = function(x) FALSE)
+            }
             gmax = eigen(G)$vectors[,1]
         } else stop("Unknown G type")
     } else
@@ -67,7 +70,7 @@ runSimulation = function(G_type = c("Diagonal", "Integrated"), G = NULL,
         Surface_type = "Single"
     } else
         Surface_type = "Muliple"
-    theta = matrix(peakPool[sample(1:nrow(peakPool), n_peaks),], n_peaks, p)
+    if(is.null(theta)) theta = matrix(peakPool[sample(1:nrow(peakPool), n_peaks),], n_peaks, p)
     W_bar = W_bar_factory(theta)
     W_bar_grad = W_bar_gradient_factory(theta)
     trajectory = calculateTrajectory(rep(0, p), G, W_bar, W_bar_grad, scale = scale)
@@ -124,17 +127,3 @@ plotDzgmax_normdz(results_G_corr_W_multi , xlim = c(0, 1), ylim = c(1, 6), main 
 abline(h=2)
 dev.off()
 
-
-peakPool = 
-plot(apply(peakPool[sample(1:10000, 200),], 1, function(x) vector_cor(x, rep(1, 8))))
-hist((apply(peakPool_G_diag, 1, Norm)))
-prcomp(peakPool)
-
-peaks = randomPeaks(5000, 8, intervals = c(0.7, 0.8, 1), prop = c(0.9, 0.06, 0.04), dz_lim = c(3, 6))
-hist(sort(apply(peaks, 1, vector_cor, rep(1, 8))), breaks = 50)
-
-
-x = runSimulation("Integrated", n_peaks = 5, p = 2, scale = 4, 
-                  peakPool = randomPeaks(100, p = 2, dz_limits = c(3, 6), 
-                                         intervals = c(1), prop = c(1)))
-plotW_bar_trajectory(x)
