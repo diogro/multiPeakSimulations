@@ -10,6 +10,7 @@ if(!require(matrixStats)){install.packages("matrixStats"); library(matrixStats)}
 if(!require(tictoc)){install.packages("tictoc"); library(tictoc)}
 if(!require(NCmisc)){install.packages("NCmisc"); library(NCmisc)}
 if(!require(ContourFunctions)){devtools::install_github("CollinErickson/contour"); library(ContourFunctions)}
+if(!require(plotrix)){install.packages("plotrix"); library(plotrix)}
 
 mypalette = colorRampPalette(c(wes_palette(10, name = "Zissou1", type = "continuous"), "darkred"))(50)
 
@@ -99,12 +100,7 @@ runSimulation = function(G_type = c("Diagonal", "Integrated"), G = NULL,
             diag(G) = rnorm(p, 1, 0.1)
             gmax = eigen(G)$vectors[,1]
         } else if(G_type == "Integrated"){
-            while(TRUE){
-                G = matrix(rnorm(n_traits*n_traits, rho, 0.05), n_traits, n_traits)
-                G = (G + t(G))/2
-                diag(G) = rnorm(n_traits, 1, 0.1)
-                tryCatch({chol(G); break}, error = function(x) FALSE)
-            }
+            G = G_factory(p, rho)
             gmax = eigen(G)$vectors[,1]
         } else stop("Unknown G type")
     } else
