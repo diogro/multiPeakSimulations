@@ -1,7 +1,3 @@
-diff_cut_off = 1e-4
-max_gens = 10000
-max_stand_still = 5
-space_size = 6
 
 source("./trajectoryTools.R")
 
@@ -10,6 +6,7 @@ registerDoMC(32)
 
 n_peaks = 20
 n_traits = 8
+space_size = 6
 
 
 #########################
