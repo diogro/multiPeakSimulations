@@ -36,15 +36,15 @@ prcomp(peakPool)
 peaks = randomPeaks(5000, 8, intervals = c(0.7, 0.8, 1), prop = c(0.9, 0.06, 0.04), dz_lim = c(3, 6))
 hist(sort(apply(peaks, 1, vector_cor, rep(1, 8))), breaks = 50)
 
-set.seed(32) # 2, 10, 15, 18, 22, 25, 27, 30, 31
+set.seed(50) # 2, 10, 15, 18, 22, 25, 27, 30, 31, 38, 45, 47, 48, 49
 {
-par(mfrow=c(1,1))
-peakPool = randomPeaks(100, p = 2, dz_limits = c(3, 6), 
-                                         intervals = c(1), prop = c(1))
-theta = matrix(peakPool[sample(1:nrow(peakPool), 5),], 5, p)
-#plotW_bar(theta, mypalette = colorRampPalette(wes_palette(name = "Zissou1", type = "continuous")))
-x = runSimulation("Integrated", rho = 0.9, n_peaks = 5, p = 2, scale = 4, theta = theta)
-plotW_bar_trajectory(x, asp = 1)
-y = runSimulation("Diagonal", n_peaks = 5, p = 2, scale = 4, theta = theta)
-plotW_bar_trajectory(y, asp =1)
+  par(mfrow=c(1,1))
+  peakPool = randomPeaks(100, p = 2, dz_limits = c(3, 6), 
+                         intervals = c(1), prop = c(1))
+  theta = matrix(peakPool[sample(1:nrow(peakPool), 5),], 5, p)
+  #plotW_bar(theta, mypalette = colorRampPalette(wes_palette(name = "Zissou1", type = "continuous")))
+  x = runSimulation("Integrated", rho = 0.9, n_peaks = 5, p = 2, scale = 4, theta = theta)
+  plotW_bar_trajectory(x, asp = 1)
+  y = runSimulation("Diagonal", n_peaks = 5, p = 2, scale = 4, theta = theta)
+  plotW_bar_trajectory(y, asp =1)
 }
