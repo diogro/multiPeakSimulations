@@ -31,21 +31,18 @@ gplotW_bar(peaks, 10)
 space_size = 10
 npeaks = 50
 p = 2
-set.seed(50) 
+set.seed(50) # 50
 {
   peakPool = randomPeaks(100, p = p, dz_limits = c(3, 6), 
                          intervals = c(1), prop = c(1))
   theta = matrix(peakPool[sample(1:nrow(peakPool), npeaks),], npeaks, p)
-  plotW_bar(theta, asp = 1)
   x = runSimulation("Integrated", rho = 0.75, p = p, scale = 4, theta = theta)
-  p_x = gplotW_bar_trajectory(x, space_size, main = "Integrated - rho = 0.9") 
+  p_x = gplotW_bar_trajectory(x, 9, main = "Integrated - rho = 0.75") 
   y = runSimulation("Diagonal", p = 2, scale = 4, theta = theta)
-  p_y = gplotW_bar_trajectory(y, space_size, main = "Diagonal", resolution = 0.5, mypalette = mypalette) 
-  plot_grid(p_x , p_y)
+  p_y = gplotW_bar_trajectory(y, 9, main = "Diagonal") 
+  pxy = plot_grid(p_x , p_y)
 }
-
-mypalette = colorRampPalette(c("transparent", wes_palette(10, name = "Zissou1", type = "continuous"), "darkred"))
-
+save_plot("~/surfaces.png", pxy, base_height = 7, base_asp = 1, ncol = 2)
 
 space_size = 6
 npeaks = 5
