@@ -79,7 +79,6 @@ npeaks = 50
 p = 2
 HEAD
 set.seed(50) # 50
-de907f3651778f45c1c874dbcd3f16428ac95019
 {
   peakPool = randomPeaks(100, p = p, dz_limits = c(3, 6), 
                          intervals = c(1), prop = c(1))
