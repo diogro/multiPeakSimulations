@@ -1,0 +1,93 @@
+---
+title: "Simulation Methods"
+author: "Diogo Melo"
+date: "9/1/2019"
+output:
+  html_document:
+    highlight: tango
+    number_sections: no
+    theme: flatly
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+In this document we describe in detail the simultations used to study the interaction between population
+covariation patterns with differing levels of integration with different selective surfaces. Our objective is
+to determine what aspects influence the total ammount of evolution in each cenario, and to relate this
+to a simple observable metric that relates the direction of evolution with the pattern of covariation
+in the population. 
+
+The simulations have several parameters, and we explore these in turn.
+
+## The selective surface
+
+The first thing to explore is the generative processes of selective surfaces. We are creating both very
+simple selective surfaces, with only a single phenotypic optimum for the population, and complex surfaces,
+with several optima disperced across the phenotypic space. In order to acheive this, we use a mixture of gaussian
+functions. For the single peak landscape, we can simply sample a multivariate mean $\theta$ from some random distribution and use the diagonal matrix (\omega) as a covariance for the multivariate normal. This induces the following mean fitness
+surface, for a $k$-dimensional phenotype $x$:
+
+$$
+\overline W(x) = \mathcal{N}(x|\theta, \omega) = (2\pi)^{\frac{k}{2}}det(\omega)^{\frac{1}{2}} e^{-\frac{1}{2} (x-\theta)^T \omega^{-1} (x-\theta)} 
+$$
+
+For a bivarite phenotype, we can visualize this surface using a color gradient. The triangle marks
+the position of the $\theta$ parameter. The origin of the coordinate system marks where our populations 
+will be in relation to the selective surface:
+
+![Fig 1. Single peak surface.](plots/ex_surface.png)
+
+Creating more complex surfaces can follow basically the same strategy, but using several overlapping 
+gaussian surfaces. For this, we have to sample several $\theta$ parameters and define the fitness as the sum of all the gaussian functions. For a set of $N$ gaussians, each with a different $\theta$ and the same $\omega$ we have:
+
+$$
+\overline W(x) = \mathcal{N}(x|\theta_i, \omega) = (2\pi)^{\frac{k}{2}}det(\omega)^{\frac{1}{2}} \sum_{i=1}^N e^{-\frac{1}{2} (x-\theta_i)^T \omega^{-1} (x-\theta_i)} 
+$$
+
+
+In two dimensions, we could
+use uniform distributions in some interval to sample the $(x, y)$ components for several optima, like so:
+
+![Fig 2. Multiple gaussian optima with uniform coordinates.](plots/peaks_square.png)
+
+However, this causes problems in relation to the origin, as some directions have more peaks than others. The directions along the diagonals are larger than along the axis, and so we end up with more peaks along these directions. One solution is to sample the $(x, y)$ components from a normal distribution, which is spherically symmetrical, and then scale the resulting vectors to a magnitude sampled from a uniform distribution. This gives us control over the distance of the peaks from the origin and guarantees that all directions are equally likely:
+
+![Fig 3. Multiple gaussian optima with spherical symmetry and uniform distance from origin.](plots/peaks_circle.png)
+
+The final restriction on the multiple peaks is to impose a minimal distance from the origin, so that
+our popultion can evolve, and not start the simulation already at a phenotypic optima. We do this by restricting the distance of the gaussian optima to be larger than some minimal distance:
+
+![Fig 4. Multiple gaussian optima with spherical symmetry and a minimal distance from the origin](plots/peaks_ring.png)
+
+This particular set of optima results in the following complex surface. We can see that the global optima for the surface don't necessarily coincide with one particular $\theta$ and that this method can create complex surfaces, with several peaks, valeys, ridges, and saddle points:
+
+![Fig 4. Multiple gaussian optima with spherical symmetry and a minimal distance from the origin](plots/peaks_ring_surface.png)
+
+
+## Interaction between population and surface
+ 
+After we have created a surface, we can place a population at any point and use quantitative genetics theory
+to predict how the mean phenotype of the population will change over time. Assuming the additive genetic covariance matrix
+of the population ($G$-matrix) stays constant, at each generation the change in the mean phenotype $\Delta z$ will be given by the
+Lande equation:
+ 
+$$
+\Delta z = G \beta = G \frac{1}{\overline W} \nabla \overline W = G  \nabla ln \overline W
+$$
+
+In this equation, the selection gradient is given by the gradient of the selective surface. Multiplying the gradient at the position the population currently occupies by the G-matrix gives the phenotypic change, which can be added to the current position to obtain the new position of the population after selection. Iterating this processes gives trajectory in phenotype space, which stops when the gradient is zero. Different covariance matrices will create different trajectories. For example, matrices with low or high correlations will differ in trajectory:
+
+![Fig 5. Different G-matrices produce different trajectories for the surface in fig. 1.](plots/ex_trajectory.png)
+
+In this example, both population end up on the same optimum, but along different trajectories in phenotype space. However, if the surface is more complex, with several optima, they can end up on different optima. Here is an exemple of a slighly more complex surface:
+
+![Fig 6. Different G-matrices can alter the final position in the landscape.](plots/ex_trajectory_multi.png)
+
