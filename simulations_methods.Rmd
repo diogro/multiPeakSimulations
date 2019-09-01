@@ -1,0 +1,42 @@
+---
+title: "Simulation Methods"
+author: "Diogo Melo"
+date: "9/1/2019"
+output:
+  html_document:
+    highlight: tango
+    number_sections: yes
+    theme: flatly
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+In this document we describe in detail the simultations used to study the interaction between population
+covariation patterns with differing levels of integration with different selective surfaces. Our objective is
+to determine what aspects influence the total ammount of evolution in each cenario, and to relate this
+to a simple observable metric that relates the direction of evolution with the pattern of covariation
+in the population. 
+
+The simulations have several parameters, and we explore these in turn.
+
+## The selective surfaces
+
+The first thing to explore is the generative processes of selective surfaces. We are creating both very
+simple selective surfaces, with only a single phenotypic optimum for the population, and complex surfaces,
+with several optima disperced across the phenotypic space. In order to acheive this, we use a mixture of gaussian
+functions. For the single peak landscape, we can simply sample a multivariate mean $\theta$ from some random distribution and use the diagonal matrix (\omega) as a covariance for the multivariate normal. This induces the following mean fitness
+surface, for a $k$ dimension phenotype:
+
+$$
+\overline W(x)_{\theta, \omega} = \mathcal{N}(x|\theta, \omega) = (2\pi)^{\frac{k}{2}}det(\omega)^{\frac{1}{2}} e^{-\frac{1}{2} (x-\theta)^T \omega^{-1} (x-\theta)} 
+$$
+
+ a diagonal covariance matrix. This 

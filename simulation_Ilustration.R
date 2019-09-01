@@ -1,7 +1,6 @@
 source("./trajectoryTools.R")
 if(!require(magick)){install.packages("magick"); library(magick)}
 
-
 ################
 # Peak distribution
 ################
