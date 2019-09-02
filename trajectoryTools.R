@@ -14,9 +14,9 @@ if(!require(plotrix)){install.packages("plotrix"); library(plotrix)}
 if(!require(ggplot2)){install.packages("ggplot2"); library(ggplot2)}
 if(!require(cowplot)){install.packages("cowplot"); library(cowplot)}
 
-diff_cut_off = 1e-3
-max_gens = 10000
-max_stand_still = 5
+diff_cut_off = 1e-4
+max_gens = 100000
+max_stand_still = 100
 
 mypalette = colorRampPalette(c(wes_palette(10, name = "Zissou1", type = "continuous"), "darkred"))(50)
 
