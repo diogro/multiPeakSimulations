@@ -125,11 +125,11 @@ runSimulation = function(G_type = c("Diagonal", "Integrated"), G = NULL,
 }
 
 plotDzgmax_normdz = function(results, ...){
-  dz_gmax = sapply(results, function(x) vector_cor(x$net_dz, x$gmax))
-  norm_dz = sapply(results, function(x) Norm(x$net_dz))
-  plot(dz_gmax, norm_dz, pch = 19, 
-       xlab = expression(paste("Vector correlation between ", Delta,"z and ",g[max])),
-       ylab = expression(paste("||", Delta,"z||")), ...)
+  df = data.frame(dz_gmax = sapply(results, function(x) vector_cor(x$net_dz, x$gmax)),
+                  norm_dz = sapply(results, function(x) Norm(x$net_dz)))
+  ggplot(df, aes(dz_gmax, norm_dz)) + geom_point(shape = 19) +  
+       labs(xlab = expression(paste("Vector correlation between ", Delta,"z and ",g[max])),
+            ylab = expression(paste("||", Delta,"z||")))
 }
 
 plotW_bar_trajectory = function(run, xlimits = c(-space_size, space_size), ylimits = c(-space_size, space_size),
