@@ -1,7 +1,6 @@
 source("./trajectoryTools.R")
 if(!require(magick)){install.packages("magick"); library(magick)}
 
-
 ################
 # Peak distribution
 ################
@@ -52,22 +51,32 @@ save_plot("./plots/peaks_ring_surface.png", peaks_ring_surface, base_height = 9,
 
 set.seed(1)
 peak = matrix(c(2.5, 5), 1, 2)
-y = runSimulation("Integrated", rho = 0.75, p = 2, scale = 4, theta = peak)
-ex_traj = gplotW_bar_trajectory(y, space_size, xlimits = c(-7, space_size), ylimits = c(-3, space_size), main = "")
+ex_traj = gplotW_bar(peak, space_size, xlimits = c(-7, space_size), ylimits = c(-3, space_size), main = "")
 ex_traj = ex_traj + annotate("segment", x = -1, y = -1, yend = - 0.1, xend = - 0.1, arrow=arrow()) + 
+  annotate("text", x = -1.3, y = -1.3, label = "Starting point")
+save_plot("./plots/ex_surface.png", ex_traj, base_height = 9, base_asp = 1)
+
+set.seed(1)
+peak = matrix(c(2.5, 5), 1, 2)
+y = runSimulation("Integrated", rho = 0.75, p = 2, scale = 4, theta = peak)
+ex_traj_y = gplotW_bar_trajectory(y, space_size, xlimits = c(-7, space_size), ylimits = c(-3, space_size), main = "")
+ex_traj_y = ex_traj_y + annotate("segment", x = -1, y = -1, yend = - 0.1, xend = - 0.1, arrow=arrow()) + 
       annotate("text", x = -1.3, y = -1.3, label = "Starting point") + 
   draw_image("./plots/G_inte.png",
     x = -6, y = 6, width = 5, height = 5 )
-save_plot("./plots/ex_trajectory_int.png", ex_traj, base_height = 9, base_asp = 1)
+save_plot("./plots/ex_trajectory_int.png", ex_traj_y, base_height = 9, base_asp = 1)
 
 set.seed(1)
 x = runSimulation("Diagonal", rho = 0, p = 2, scale = 4, theta = peak)
-ex_traj = gplotW_bar_trajectory(x, space_size, xlimits = c(-7, space_size), ylimits = c(-3, space_size), main = "") 
-ex_traj = ex_traj + annotate("segment", x = -1, y = -1, yend = - 0.1, xend = - 0.1, arrow=arrow()) + 
+ex_traj_x = gplotW_bar_trajectory(x, space_size, xlimits = c(-7, space_size), ylimits = c(-3, space_size), main = "") 
+ex_traj_x = ex_traj_x + annotate("segment", x = -1, y = -1, yend = - 0.1, xend = - 0.1, arrow=arrow()) + 
   annotate("text", x = -1.3, y = -1.3, label = "Starting point") + 
   draw_image("./plots/G_diag.png",
              x = -6, y = 6, width = 5, height = 5 )
-save_plot("./plots/ex_trajectory_diag.png", ex_traj, base_height = 9, base_asp = 1)
+save_plot("./plots/ex_trajectory_diag.png", ex_traj_x, base_height = 9, base_asp = 1)
+
+
+save_plot("./plots/ex_trajectory.png", plot_grid(ex_traj_x, ex_traj_y, labels = c("Low correlation", "High correlation")), base_height = 9, base_asp = 1, ncol = 2)
 
 ##########
 # Trajectory Examples
@@ -77,7 +86,6 @@ save_plot("./plots/ex_trajectory_diag.png", ex_traj, base_height = 9, base_asp =
 space_size = 10
 npeaks = 50
 p = 2
-HEAD
 set.seed(50) # 50
 {
   peakPool = randomPeaks(100, p = p, dz_limits = c(3, 6), 
@@ -94,7 +102,7 @@ save_plot("~/surfaces.png", pxy, base_height = 7, base_asp = 1, ncol = 2)
 
 space_size = 6
 npeaks = 5
-set.seed(2) # 2, 10, 15, 18, 22, 25, 27, 30, 31, 38, 45, 47, 48, 49
+set.seed(15) # 2, 10, 15, 18, 22, 25, 27, 30, 31, 38, 45, 47, 48, 49
 {
   peakPool = randomPeaks(100, p = 2, dz_limits = c(3, space_size), 
                          intervals = c(1), prop = c(1))
@@ -104,5 +112,6 @@ set.seed(2) # 2, 10, 15, 18, 22, 25, 27, 30, 31, 38, 45, 47, 48, 49
   p_x = gplotW_bar_trajectory(x, 8)
   y = runSimulation("Diagonal", n_peaks = 5, p = 2, scale = 4, theta = theta)
   p_y = gplotW_bar_trajectory(y, 8)
-  plot_grid(p_x, p_y, labels = c("Integrated", "Diagonal"))
+  p_xy = plot_grid(p_y, p_x, labels = c("Low correlation", "High correlation"))
 }
+save_plot("./plots/ex_trajectory_multi.png", p_xy, base_height = 9, base_asp = 1, ncol = 2)

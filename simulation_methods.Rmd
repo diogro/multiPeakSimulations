@@ -1,0 +1,120 @@
+---
+title: "Simulation Methods"
+author: "Diogo Melo"
+date: "9/1/2019"
+output:
+  html_document:
+    highlight: tango
+    number_sections: no
+    theme: flatly
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+In this document we describe in detail the simultations used to study the interaction between population
+covariation patterns with differing levels of integration with different selective surfaces. Our objective is
+to determine what aspects influence the total ammount of evolution in each cenario, and to relate this
+to a simple observable metric that relates the direction of evolution with the pattern of covariation
+in the population. 
+
+The simulations have several parameters, and we explore these in turn.
+
+## The selective surface
+
+The first thing to explore is the generative processes of selective surfaces. We are creating both very
+simple selective surfaces, with only a single phenotypic optimum for the population, and complex surfaces,
+with several optima disperced across the phenotypic space. In order to acheive this, we use a mixture of gaussian
+functions. For the single peak landscape, we can simply sample a multivariate mean $\theta$ from some random distribution and use the diagonal matrix (\omega) as a covariance for the multivariate normal. This induces the following mean fitness
+surface, for a $k$-dimensional phenotype $x$:
+
+$$
+\overline W(x) = \mathcal{N}(x|\theta, \omega) = (2\pi)^{\frac{k}{2}}det(\omega)^{\frac{1}{2}} e^{-\frac{1}{2} (x-\theta)^T \omega^{-1} (x-\theta)} 
+$$
+
+For a bivarite phenotype, we can visualize this surface using a color gradient. The triangle marks
+the position of the $\theta$ parameter. The origin of the coordinate system marks where our populations 
+will be in relation to the selective surface:
+
+![Fig 1. Single peak surface.](plots/ex_surface.png)
+
+Creating more complex surfaces can follow basically the same strategy, but using several overlapping 
+gaussian surfaces. For this, we have to sample several $\theta$ parameters and define the fitness as the sum of all the gaussian functions. For a set of $N$ gaussians, each with a different $\theta$ and the same $\omega$ we have:
+
+$$
+\overline W(x) = \sum_{i=1}^N \mathcal{N}(x|\theta_i, \omega) = (2\pi)^{\frac{k}{2}}det(\omega)^{\frac{1}{2}} \sum_{i=1}^N e^{-\frac{1}{2} (x-\theta_i)^T \omega^{-1} (x-\theta_i)} 
+$$
+
+
+In two dimensions, we could
+use uniform distributions in some interval to sample the $(x, y)$ components for several optima, like so:
+
+![Fig 2. Multiple gaussian optima with uniform coordinates.](plots/peaks_square.png)
+
+However, this causes problems in relation to the origin, as some directions have more peaks than others. The directions along the diagonals are larger than along the axis, and so we end up with more peaks along these directions. One solution is to sample the $(x, y)$ components from a normal distribution, which is spherically symmetrical, and then scale the resulting vectors to a magnitude sampled from a uniform distribution. This gives us control over the distance of the peaks from the origin and guarantees that all directions are equally likely:
+
+![Fig 3. Multiple gaussian optima with spherical symmetry and uniform distance from origin.](plots/peaks_circle.png)
+
+The final restriction on the multiple peaks is to impose a minimal distance from the origin, so that
+our popultion can evolve, and not start the simulation already at a phenotypic optima. We do this by restricting the distance of the gaussian optima to be larger than some minimal distance:
+
+![Fig 4. Multiple gaussian optima with spherical symmetry and a minimal distance from the origin](plots/peaks_ring.png)
+
+This particular set of optima results in the following complex surface. We can see that the global optima for the surface don't necessarily coincide with one particular $\theta$ and that this method can create complex surfaces, with several peaks, valeys, ridges, and saddle points:
+
+![Fig 4. Multiple gaussian optima with spherical symmetry and a minimal distance from the origin](plots/peaks_ring_surface.png)
+
+
+## Interaction between genetic covariation and the selective surface
+ 
+After we have created a surface, we can place a population at any point and use quantitative genetics theory
+to predict how the mean phenotype of the population will change over time. Assuming the additive genetic covariance matrix
+of the population ($G$-matrix) stays constant, at each generation the change in the mean phenotype $\Delta z$ will be given by the
+Lande equation:
+ 
+$$
+\Delta z = G \beta = G \frac{1}{\overline W} \nabla \overline W = G  \nabla ln \overline W
+$$
+
+In this equation, the selection gradient is given by the gradient of the selective surface. Multiplying the gradient at the position the population currently occupies by the G-matrix gives the phenotypic change, which can be added to the current position to obtain the new position of the population after selection. Iterating this processes gives a trajectory in phenotype space, which stops when the gradient is zero. Different covariance matrices will create different trajectories. For example, matrices with low or high correlations will differ in trajectory:
+
+![Fig 5. Different G-matrices produce different trajectories for the surface in fig. 1.](plots/ex_trajectory.png)
+
+In this example, both populations end up on the same optimum, but along different trajectories in phenotype space. However, if the surface is more complex, with several optima, they can end up on different optima. Here is an exemple of a slighly more complex surface where the different correlations lead the populations to different optima on the same surface:
+
+![Fig 6. Different G-matrices can alter the final position in the landscape.](plots/ex_trajectory_multi.png)
+
+As the surfaces become more complex, these cases become more frequent. 
+
+## Simulations
+
+In these simulations, we investigate the relation between the magnitude of the total phenotypic change ($||\Delta z||$) and the allignment between the direction of phenotypic change and the main axis of genetic variation in the populations (given by the cossine of the angle between these vectors: $Cos(gmax, \Delta z)$). 
+
+![Fig 7. Scheme of the measures in a simulation. The total lengh of the phenotypic change is given by the norm of the $\Delta z$ vector. The angle between the direction of most genetic variation and the $\Delta z$ vector measure the alligment between the phenotypic change and genetic variation.](plots/image10.png)
+
+
+We use 4 different scenarions, presenting high and low integration populations with single and multi peaked selective surfaces. By generating several different surfaces, we can investigate the relation between these variables. 
+
+### Random peaks
+
+We start with a random placement of possible peaks, like in figure 4. This leads to the following relations
+between total ammount of phenotypic change and the correlation between phenotypic change and gentic variation:
+
+![Fig 8. Simulations using random peaks. We see a clear lack of $\Delta z$ with high correlation to gmax. Ijn this simulation, dimensionality of the phenotype is k = 8, and in the multi peak landscape we have N = 50 peaks. Simulations are repeated 1000 times.](plots/peakPool_composite_random.png)
+
+We see a clear difference between the single peak and random peak, but no much difference between diagonal and integrated matrices. There is a lack of $\Delta z$ alligned with gmax. 
+
+### Enriched peaks
+
+We can use our peak generating process to increase the ammount of peaks alligned with gmax. This is necessary in high dimensions, as the probability that there are any peaks alligned with gmax at random goes to zero in high dimensions. A slighth enrichment of the peaks alligned with gmax gives the following pattern:
+
+![Fig 8. Simulations using random peaks. We see a clear lack of $\Delta z$ with high correlation to gmax. Ijn this simulation, dimensionality of the phenotype is k = 8, and in the multi peak landscape we have N = 50 peaks. Simulations are repeated 1000 times.](plots/peakPool_composite_enriched.png)
+
+Under these conditions, we see that the magnitude of $\Delta z$ increases as a function of the alligment with gmax. This pattern is similar to the one observed in natural populations.
