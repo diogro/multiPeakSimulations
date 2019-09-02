@@ -73,46 +73,35 @@ runTrypitch = function(G_diag, peakPool_diag, G_corr, peakPool_corr, n = 1000, n
        CM = results_G_corr_W_multi)
 }
 
-results_enriched = runTrypitch(G_diag, peakPool_G_corr_enriched, G_corr, peakPool_G_corr_enriched)
-results_random   = runTrypitch(G_diag, peakPool_G_corr_random,   G_corr, peakPool_G_corr_random)
-results_uniform  = runTrypitch(G_diag, peakPool_G_corr_uniform,  G_corr, peakPool_G_corr_uniform)
+results_enriched = runTrypitch(G_diag, peakPool_G_corr_enriched, G_corr, peakPool_G_corr_enriched, n = 16, n_peaks = 4)
+# results_random   = runTrypitch(G_diag, peakPool_G_corr_random,   G_corr, peakPool_G_corr_random)
+# results_uniform  = runTrypitch(G_diag, peakPool_G_corr_uniform,  G_corr, peakPool_G_corr_uniform)
+# 
+# save(results_enriched,
+#      results_random,  
+#      results_uniform, file = "plots/results.Rdata")
+load("./plots/results.Rdata")
 
-save(results_enriched,
-     results_random,  
-     results_uniform, file = "plots/results.Rdata")
+plots_enriched = plot_grid(
+  plotDzgmax_normdz(results_enriched$DS, ylim = c(1, space_size), main = "Diagonal G - Single Peak"),
+  plotDzgmax_normdz(results_enriched$CS, ylim = c(1, space_size), main = "Integrated G - Single Peak"),
+  plotDzgmax_normdz(results_enriched$DM, ylim = c(1, space_size), main = "Diagonal G - Multiple Peaks"),
+  plotDzgmax_normdz(results_enriched$CM, ylim = c(1, space_size), main = "Integrated G - Multiple Peaks"),
+  ncol = 2, labels = LETTERS[1:4])
+save_plot("plots/peakPool_composite_enriched.png", plots_enriched, base_height = 5, base_asp = 1.3, ncol = 2, nrow = 2)
 
-png("plots/peakPool_composite_enriched.png", width = 1440, height = 1080)
-par(mfrow=c(2, 2), cex.lab = 3)
-plotDzgmax_normdz(results_enriched$DS, xlim = c(0, 1), ylim = c(1, space_size), main = "Diagonal G - Single Peak")
-abline(h=3)
-plotDzgmax_normdz(results_enriched$CS, xlim = c(0, 1), ylim = c(1, space_size), main = "Integrated G - Single Peak")
-abline(h=3)
-plotDzgmax_normdz(results_enriched$DM, xlim = c(0, 1), ylim = c(1, space_size), main = "Diagonal G - Multiple Peaks")
-abline(h=3)
-plotDzgmax_normdz(results_enriched$CM, xlim = c(0, 1), ylim = c(1, space_size), main = "Integrated G - Multiple Peaks")
-abline(h=3)
-dev.off()
+plots_random = plot_grid(
+  plotDzgmax_normdz(results_random$DS, ylim = c(1, space_size), main = "Diagonal G - Single Peak"),
+  plotDzgmax_normdz(results_random$CS, ylim = c(1, space_size), main = "Integrated G - Single Peak"),
+  plotDzgmax_normdz(results_random$DM, ylim = c(1, space_size), main = "Diagonal G - Multiple Peaks"),
+  plotDzgmax_normdz(results_random$CM, ylim = c(1, space_size), main = "Integrated G - Multiple Peaks"),
+  ncol = 2, labels = LETTERS[1:4])
+save_plot("plots/peakPool_composite_random.png", plots_enriched, base_height = 5, base_asp = 1.3, ncol = 2, nrow = 2)
 
-png("plots/peakPool_composite_random.png", width = 1440, height = 1080)
-par(mfrow=c(2, 2))
-plotDzgmax_normdz(results_random$DS, xlim = c(0, 1), ylim = c(1, space_size), main = "Diagonal G - Single Peak")
-abline(h=3)
-plotDzgmax_normdz(results_random$CS, xlim = c(0, 1), ylim = c(1, space_size), main = "Integrated G - Single Peak")
-abline(h=3)
-plotDzgmax_normdz(results_random$DM, xlim = c(0, 1), ylim = c(1, space_size), main = "Diagonal G - Multiple Peaks")
-abline(h=3)
-plotDzgmax_normdz(results_random$CM, xlim = c(0, 1), ylim = c(1, space_size), main = "Integrated G - Multiple Peaks")
-abline(h=3)
-dev.off()
-
-png("plots/peakPool_composite_uniform.png", width = 1440, height = 1080)
-par(mfrow=c(2, 2))
-plotDzgmax_normdz(results_uniform$DS, xlim = c(0, 1), ylim = c(1, space_size), main = "Diagonal G - Single Peak")
-abline(h=3)
-plotDzgmax_normdz(results_uniform$CS, xlim = c(0, 1), ylim = c(1, space_size), main = "Integrated G - Single Peak")
-abline(h=3)
-plotDzgmax_normdz(results_uniform$DM, xlim = c(0, 1), ylim = c(1, space_size), main = "Diagonal G - Multiple Peaks")
-abline(h=3)
-plotDzgmax_normdz(results_uniform$CM, xlim = c(0, 1), ylim = c(1, space_size), main = "Integrated G - Multiple Peaks")
-abline(h=3)
-dev.off()
+plots_uniform = plot_grid(
+  plotDzgmax_normdz(results_uniform$DS, ylim = c(1, space_size), main = "Diagonal G - Single Peak"),
+  plotDzgmax_normdz(results_uniform$CS, ylim = c(1, space_size), main = "Integrated G - Single Peak"),
+  plotDzgmax_normdz(results_uniform$DM, ylim = c(1, space_size), main = "Diagonal G - Multiple Peaks"),
+  plotDzgmax_normdz(results_uniform$CM, ylim = c(1, space_size), main = "Integrated G - Multiple Peaks"),
+  ncol = 2, labels = LETTERS[1:4])
+save_plot("plots/peakPool_composite_uniform.png", plots_enriched, base_height = 5, base_asp = 1.3, ncol = 2, nrow = 2)

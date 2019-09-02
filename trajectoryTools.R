@@ -13,6 +13,7 @@ if(!require(ContourFunctions)){devtools::install_github("CollinErickson/contour"
 if(!require(plotrix)){install.packages("plotrix"); library(plotrix)}
 if(!require(ggplot2)){install.packages("ggplot2"); library(ggplot2)}
 if(!require(cowplot)){install.packages("cowplot"); library(cowplot)}
+theme_set(theme_cowplot())
 
 diff_cut_off = 1e-4
 max_gens = 100000
@@ -124,12 +125,13 @@ runSimulation = function(G_type = c("Diagonal", "Integrated"), G = NULL,
     return(trajectory)
 }
 
-plotDzgmax_normdz = function(results, main = ""){
+plotDzgmax_normdz = function(results, ylim, main = ""){
   df = data.frame(dz_gmax = sapply(results, function(x) vector_cor(x$net_dz, x$gmax)),
                   norm_dz = sapply(results, function(x) Norm(x$net_dz)))
   ggplot(df, aes(dz_gmax, norm_dz)) + geom_point(shape = 19) +  
-       labs(xlab = expression(paste("Vector correlation between ", Delta,"z and ",g[max])),
-            ylab = expression(paste("||", Delta,"z||"))) + 
+       scale_y_continuous(limits = ylim) + scale_x_continuous(limits = c(0, 1)) +
+       labs(x = expression(paste("Vector correlation between ", Delta,"z and ",g[max])),
+            y = expression(paste("||", Delta,"z||"))) + 
     ggtitle(main)
 }
 
