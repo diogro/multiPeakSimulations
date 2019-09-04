@@ -1,11 +1,16 @@
 source("./trajectoryTools.R")
 source("./plotTools.R")
 
+if(!require(MASS)){install.packages("MASS"); library(MASS)}
+
+
+library(yamdar)
+
 if(!require(doMC)){install.packages("doMC"); library(doMC)}
 registerDoMC(32)
 
 n_peaks = 20
-n_traits = 8
+n_traits = 21
 space_size = 10
 
 
@@ -15,16 +20,20 @@ space_size = 10
 
 
 # Correlated
-G_corr = G_factory(n_traits, rho = 0.9)
+G_corr = toadCor
+x = eigen(G_corr)$vector[,1]
 
-peakPool_G_corr_uniform = randomPeaks(10000, x = eigen(G_corr)$vector[,1], intervals = seq(0.05, 1, length.out = 20), prop = rep(1/20, 20), dz_lim = c(3, space_size))
-hist(sort(apply(peakPool_G_corr_uniform, 1, vector_cor, eigen(G_corr)$vector[,1])), breaks = 50)
+shapes = fitdistr(cor_dist, dbeta, list(shape1=1, shape2=10))
+
 
 peakPool_G_corr_random = randomPeaks(10000, x = eigen(G_corr)$vector[,1], dz_lim = c(3, space_size))
-hist(sort(apply(peakPool_G_corr_random, 1, vector_cor, eigen(G_corr)$vector[,1])), breaks = 50)
+cor_dist = sort(apply(peakPool_G_corr_random, 1, vector_cor, eigen(G_corr)$vector[,1]))
 
-peakPool_G_corr_enriched = randomPeaks(10000, x = eigen(G_corr)$vector[,1], intervals = c(0.8, 0.9, 1), prop = c(0.9, 0.06, 0.04), dz_lim = c(3, space_size))
-hist(sort(apply(peakPool_G_corr_enriched, 1, vector_cor, eigen(G_corr)$vector[,1])), breaks = 50)
+
+
+df = tidyr::gather(data.frame(rbeta = rbeta(10000, shape1 = shapes[[1]][1], shape2 = shapes[[1]][2]),
+                              vcor = cor_dist), dist, value)
+ggplot(df, aes(value, group = dist, fill = dist)) + geom_density(alpha = 0.5)
 
 
 # Diagonal
@@ -50,8 +59,6 @@ runSimulation("Integrated", G_corr, n_peaks = 20, n_traits, scale = 4, peakPool 
 #########################
 # Simulations
 #########################
-
-
 
 results_enriched = runTrypitch(G_diag, peakPool_G_corr_enriched, G_corr, peakPool_G_corr_enriched, n = 16, n_peaks = 4)
 # results_random   = runTrypitch(G_diag, peakPool_G_corr_random,   G_corr, peakPool_G_corr_random)
