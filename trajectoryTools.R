@@ -29,13 +29,16 @@ W_bar_gradient_factory = function(theta_matrix, w_cov = NULL){
     }
 }
 
-randomPeaks = function(n = n_peaks, p = n_traits, x = rep(1, p), intervals = 1, prop = 1, dz_limits){
+randomPeaks = function(n = n_peaks, p = n_traits, x = rep(1, p), intervals = 1, prop = 1, dz_limits, 
+                       max_uniform = n * 100, sigma_init = 2, sigma_step = 0.01){
   steps = length(intervals)
   counter = vector("numeric", steps)
   n_per = ceiling(n * prop)
   peaks = matrix(0, n, p)
   k = 1
-  while(k <= n){
+  attempts = 1
+  while(k <= n & attempts < max_uniform){
+    attempts = attempts + 1
     rpeak = Normalize(rnorm(p))
     corr = vector_cor(x, rpeak)
     for(i in 1:steps) {
@@ -44,9 +47,36 @@ randomPeaks = function(n = n_peaks, p = n_traits, x = rep(1, p), intervals = 1, 
           counter[i] = counter[i] + 1
           peaks[k,] = rpeak * runif(1, dz_limits[1], dz_limits[2])
           k = k + 1
-          break
         }
         break
+      }
+    }
+  }
+  if(k < n){
+    mask = which(counter != n_per)
+    mask = c(mask[1]-1, mask)
+    target_intervals = intervals[mask]
+    sigma = sigma_init
+    while(k <= n){
+      rpeak = Normalize(x + rnorm(p, 0, sigma))
+      corr = vector_cor(x, rpeak)
+      if(corr < target_intervals[1]){
+        sigma = sigma - sigma_step
+      } else if(corr > target_intervals[length(target_intervals)]) {
+        sigma = sigma + sigma_step
+      } else { for(i in 1:steps) {
+        if(corr < intervals[i]){
+          if(counter[i] < n_per[i]){
+            counter[i] = counter[i] + 1
+            peaks[k,] = rpeak * runif(1, dz_limits[1], dz_limits[2])
+            k = k + 1
+            mask = which(counter != n_per)
+            mask = c(mask[1]-1, mask)
+            target_intervals = intervals[mask]
+          }
+          break
+        }
+      }
       }
     }
   }

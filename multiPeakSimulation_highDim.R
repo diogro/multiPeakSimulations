@@ -3,14 +3,14 @@ source("./plotTools.R")
 
 if(!require(MASS)){install.packages("MASS"); library(MASS)}
 
-
+devtools::install_github("diogro/yamda-r", subdir = "package")
 library(yamdar)
 
 if(!require(doMC)){install.packages("doMC"); library(doMC)}
 registerDoMC(32)
 
 n_peaks = 20
-n_traits = 10 
+n_traits = 40 
 space_size = 10
 
 
@@ -18,49 +18,67 @@ space_size = 10
 # G matrices
 #########################
 
+rbeta_mixture = function(n, shapes1, shapes2, alpha){
+  f1 = function(x) rbeta(x, shapes1[1], shapes1[2])
+  f2 = function(x) rbeta(x, shapes2[1], shapes2[2])
+  out = numeric(n)
+  for(i in 1:n){
+    if(runif(1) > alpha){
+      out[i] = f1(1)
+    }else 
+      out[i] = f2(1)
+  }
+  out
+}
 
 # Correlated
 G_corr = G_factory(n_traits, rho = 0.1)
+G_corr = toadCor
+n_traits = dim(toadCor)[1]
 x = eigen(G_corr)$vector[,1]
 
 peakPool_G_corr_random = randomPeaks(10000, p = n_traits, x = eigen(G_corr)$vector[,1], dz_lim = c(3, space_size))
 cor_dist = sort(apply(peakPool_G_corr_random, 1, vector_cor, eigen(G_corr)$vector[,1]))
-
 shapes = fitdistr(cor_dist, dbeta, list(shape1=1, shape2=10))
 
-df = tidyr::gather(data.frame(rbeta_En = c(rbeta(8500, shape1 = shapes[[1]][1], shape2 = shapes[[1]][2]),
-                                        rbeta(1500, 1, 1)),
+df = tidyr::gather(data.frame(rbeta_En = rbeta_mixture(10000, shapes[[1]], c(2, 3), 0.15),
                               rbeta = rbeta(10000, shape1 = shapes[[1]][1], shape2 = shapes[[1]][2]),
                               vcor = cor_dist), dist, value)
-hs = hist(c(rbeta(8500, shape1 = shapes[[1]][1], shape2 = shapes[[1]][2]),
-  rbeta(1500, 1, 1)))
-hs$counts
-ggplot(df, aes(value, group = dist, fill = dist)) + geom_density(alpha = 0.5)
+ggplot(df, aes(value, group = dist, color = dist)) + geom_density(alpha = 0.7)
 
-peakPool_G_corr_random = randomPeaks(10000, p = n_traits, x = eigen(G_corr)$vector[,1], intervals = hs$breaks[-1], 
-            prop = hs$counts/10000,dz_lim = c(3, space_size))
-cor_dist_2 = sort(apply(peakPool_G_corr_random, 1, vector_cor, eigen(G_corr)$vector[,1]))
+td = rbeta_mixture(n, shapes[[1]], c(2, 3), 0.15)
+hs = hist(td, plot = T, breaks = 40)
+
+peakPool_G_corr_enriched = randomPeaks(n = 10000, p = n_traits, x = eigen(G_corr)$vector[,1], intervals = hs$breaks[-1], 
+                                       prop = hs$counts/n,dz_lim = c(3, space_size))
+cor_dist_2 = sort(apply(peakPool_G_corr_enriched, 1, vector_cor, eigen(G_corr)$vector[,1]))
 hist(cor_dist_2)
 
 # Diagonal
 G_diag = G_factory(n_traits, rho = 0.1)
 
-peakPool_G_diag_uniform = randomPeaks(10000, x = eigen(G_diag)$vector[,1], intervals = seq(0.05, 1, length.out = 20), prop = rep(1/20, 20), dz_lim = c(3, space_size))
-hist(sort(apply(peakPool_G_diag_uniform, 1, vector_cor, eigen(G_diag)$vector[,1])), breaks = 50)
+peakPool_G_diag_random = randomPeaks(10000, p = n_traits, x = eigen(G_diag)$vector[,1], dz_lim = c(3, space_size))
+cor_dist = sort(apply(peakPool_G_diag_random, 1, vector_cor, eigen(G_diag)$vector[,1]))
+shapes = fitdistr(cor_dist, dbeta, list(shape1=1, shape2=10))
 
-peakPool_G_diag_random = randomPeaks(10000, x = eigen(G_diag)$vector[,1], dz_lim = c(3, space_size))
-hist(sort(apply(peakPool_G_diag_random, 1, vector_cor, eigen(G_diag)$vector[,1])), breaks = 50)
+df = tidyr::gather(data.frame(rbeta_En = rbeta_mixture(10000, shapes[[1]], c(2, 3), 0.15),
+                              rbeta = rbeta(10000, shape1 = shapes[[1]][1], shape2 = shapes[[1]][2]),
+                              vcor = cor_dist), dist, value)
+ggplot(df, aes(value, group = dist, color = dist)) + geom_density(alpha = 0.7)
 
-peakPool_G_diag_enriched = randomPeaks(10000, x = eigen(G_diag)$vector[,1], intervals = c(0.7, 0.8, 1), prop = c(0.9, 0.06, 0.04), dz_lim = c(3, space_size))
-hist(sort(apply(peakPool_G_diag_enriched, 1, vector_cor, eigen(G_diag)$vector[,1])), breaks = 50)
+td = rbeta_mixture(n, shapes[[1]], c(2, 3), 0.15)
+hs = hist(td, plot = T, breaks = 40)
+
+peakPool_G_diag_enriched = randomPeaks(n = 10000, p = n_traits, x = eigen(G_diag)$vector[,1], intervals = hs$breaks[-1], 
+                                       prop = hs$counts/n,dz_lim = c(3, space_size))
 
 
 #########################
 # Test runs
 #########################
 
-runSimulation("Integrated", G_corr, n_peaks = 1, n_traits, scale = 4, peakPool = peakPool_G_corr_enriched)
-runSimulation("Integrated", G_corr, n_peaks = 20, n_traits, scale = 4, peakPool = peakPool_G_corr_enriched)
+runSimulation("Integrated", G_corr, n_peaks = 1, n_traits, scale = 10, peakPool = peakPool_G_corr_enriched)
+runSimulation("Integrated", G_corr, n_peaks = 20, n_traits, scale = 10, peakPool = peakPool_G_corr_enriched)
 
 #########################
 # Simulations
