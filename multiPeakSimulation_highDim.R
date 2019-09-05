@@ -10,7 +10,7 @@ if(!require(doMC)){install.packages("doMC"); library(doMC)}
 registerDoMC(32)
 
 n_peaks = 20
-n_traits = 21
+n_traits = 10 
 space_size = 10
 
 
@@ -20,21 +20,27 @@ space_size = 10
 
 
 # Correlated
-G_corr = toadCor
+G_corr = G_factory(n_traits, rho = 0.1)
 x = eigen(G_corr)$vector[,1]
+
+peakPool_G_corr_random = randomPeaks(10000, p = n_traits, x = eigen(G_corr)$vector[,1], dz_lim = c(3, space_size))
+cor_dist = sort(apply(peakPool_G_corr_random, 1, vector_cor, eigen(G_corr)$vector[,1]))
 
 shapes = fitdistr(cor_dist, dbeta, list(shape1=1, shape2=10))
 
-
-peakPool_G_corr_random = randomPeaks(10000, x = eigen(G_corr)$vector[,1], dz_lim = c(3, space_size))
-cor_dist = sort(apply(peakPool_G_corr_random, 1, vector_cor, eigen(G_corr)$vector[,1]))
-
-
-
-df = tidyr::gather(data.frame(rbeta = rbeta(10000, shape1 = shapes[[1]][1], shape2 = shapes[[1]][2]),
+df = tidyr::gather(data.frame(rbeta_En = c(rbeta(8500, shape1 = shapes[[1]][1], shape2 = shapes[[1]][2]),
+                                        rbeta(1500, 1, 1)),
+                              rbeta = rbeta(10000, shape1 = shapes[[1]][1], shape2 = shapes[[1]][2]),
                               vcor = cor_dist), dist, value)
+hs = hist(c(rbeta(8500, shape1 = shapes[[1]][1], shape2 = shapes[[1]][2]),
+  rbeta(1500, 1, 1)))
+hs$counts
 ggplot(df, aes(value, group = dist, fill = dist)) + geom_density(alpha = 0.5)
 
+peakPool_G_corr_random = randomPeaks(10000, p = n_traits, x = eigen(G_corr)$vector[,1], intervals = hs$breaks[-1], 
+            prop = hs$counts/10000,dz_lim = c(3, space_size))
+cor_dist_2 = sort(apply(peakPool_G_corr_random, 1, vector_cor, eigen(G_corr)$vector[,1]))
+hist(cor_dist_2)
 
 # Diagonal
 G_diag = G_factory(n_traits, rho = 0.1)
