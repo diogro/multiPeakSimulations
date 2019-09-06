@@ -29,6 +29,19 @@ W_bar_gradient_factory = function(theta_matrix, w_cov = NULL){
     }
 }
 
+rbeta_mixture = function(n, shapes1, shapes2, alpha){
+  f1 = function(x) rbeta(x, shapes1[1], shapes1[2])
+  f2 = function(x) rbeta(x, shapes2[1], shapes2[2])
+  out = numeric(n)
+  for(i in 1:n){
+    if(runif(1) > alpha){
+      out[i] = f1(1)
+    }else 
+      out[i] = f2(1)
+  }
+  out
+}
+
 randomPeaks = function(n = n_peaks, p = n_traits, x = rep(1, p), intervals = 1, prop = 1, dz_limits, 
                        max_uniform = n * 100, sigma_init = 2, sigma_step = 0.01){
   steps = length(intervals)
@@ -149,21 +162,21 @@ runSimulation = function(G_type = c("Diagonal", "Integrated"), G = NULL,
     return(trajectory)
 }
 
-runTrypitch = function(G_diag, peakPool_diag, G_corr, peakPool_corr, n = 1000, n_peaks = 50, parallel = TRUE){
+runTrypitch = function(G_diag, peakPool_diag, G_corr, peakPool_corr, n = 1000, n_peaks = 50, scale = 4, parallel = TRUE){
   results_G_diag_W_single = llply(1:n, function(x) runSimulation("Diag", G_diag,   1, n_traits, 
-                                                                 scale = 4, 
+                                                                 scale = scale, 
                                                                  peakPool = peakPool_diag), 
                                   .parallel = parallel)
   results_G_corr_W_single = llply(1:n, function(x) runSimulation("Inte", G_corr,   1, n_traits, 
-                                                                 scale = 4, 
+                                                                 scale = scale, 
                                                                  peakPool = peakPool_corr), 
                                   .parallel = parallel)
   results_G_diag_W_multi  = llply(1:n, function(x) runSimulation("Diag", G_diag, n_peaks, n_traits, 
-                                                                 scale = 4, 
+                                                                 scale = scale, 
                                                                  peakPool = peakPool_diag), 
                                   .parallel = parallel)
   results_G_corr_W_multi  = llply(1:n, function(x) runSimulation("Inte", G_corr, n_peaks, n_traits, 
-                                                                 scale = 4, 
+                                                                 scale = scale, 
                                                                  peakPool = peakPool_corr), 
                                   .parallel = parallel)
   list(DS = results_G_diag_W_single,
