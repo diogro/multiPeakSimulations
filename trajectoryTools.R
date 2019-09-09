@@ -163,26 +163,26 @@ runSimulation = function(G_type = c("Diagonal", "Integrated"), G = NULL,
 }
 
 runTrypitch = function(G_diag, peakPool_diag, G_corr, peakPool_corr, n = 1000, n_peaks = 50, scale = 4, parallel = TRUE){
-  results_G_diag_W_single = llply(1:n, function(x) runSimulation("Diag", G_diag,   1, n_traits, 
-                                                                 scale = scale, 
-                                                                 peakPool = peakPool_diag), 
-                                  .parallel = parallel)
-  results_G_corr_W_single = llply(1:n, function(x) runSimulation("Inte", G_corr,   1, n_traits, 
-                                                                 scale = scale, 
-                                                                 peakPool = peakPool_corr), 
-                                  .parallel = parallel)
-  results_G_diag_W_multi  = llply(1:n, function(x) runSimulation("Diag", G_diag, n_peaks, n_traits, 
-                                                                 scale = scale, 
-                                                                 peakPool = peakPool_diag), 
-                                  .parallel = parallel)
-  results_G_corr_W_multi  = llply(1:n, function(x) runSimulation("Inte", G_corr, n_peaks, n_traits, 
-                                                                 scale = scale, 
-                                                                 peakPool = peakPool_corr), 
-                                  .parallel = parallel)
-  list(DS = results_G_diag_W_single,
-       CS = results_G_corr_W_single,                                                                  
-       DM = results_G_diag_W_multi,
-       CM = results_G_corr_W_multi)
+  G_diag_W_single = llply(1:n, function(x) runSimulation("Diag", G_diag,   1, n_traits, 
+                                                         scale = scale, 
+                                                         peakPool = peakPool_diag), 
+                          .parallel = parallel)
+  G_corr_W_single = llply(1:n, function(x) runSimulation("Inte", G_corr,   1, n_traits, 
+                                                         scale = scale, 
+                                                         peakPool = peakPool_corr), 
+                          .parallel = parallel)
+  G_diag_W_multi  = llply(1:n, function(x) runSimulation("Diag", G_diag, n_peaks, n_traits, 
+                                                         scale = scale, 
+                                                         peakPool = peakPool_diag), 
+                          .parallel = parallel)
+  G_corr_W_multi  = llply(1:n, function(x) runSimulation("Inte", G_corr, n_peaks, n_traits, 
+                                                         scale = scale, 
+                                                         peakPool = peakPool_corr), 
+                          .parallel = parallel)
+  list(DS = G_diag_W_single,
+       CS = G_corr_W_single,                                                                  
+       DM = G_diag_W_multi,
+       CM = G_corr_W_multi)
 }
 
 G_factory = function(p, rho, sigma = 0.1){
