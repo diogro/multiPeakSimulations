@@ -10,7 +10,7 @@ if(!require(NCmisc)){install.packages("NCmisc"); library(NCmisc)}
 
 
 diff_cut_off = 1e-4
-max_gens = 100000
+max_gens = 10000
 max_stand_still = 100
 
 mypalette = colorRampPalette(c(wes_palette(10, name = "Zissou1", type = "continuous"), "darkred"))(50)
@@ -43,7 +43,7 @@ rbeta_mixture = function(n, shapes1, shapes2, alpha){
 }
 
 randomPeaks = function(n = n_peaks, p = n_traits, x = rep(1, p), intervals = 1, prop = 1, dz_limits, 
-                       max_uniform = n * 100, sigma_init = 2, sigma_step = 0.01){
+                       max_uniform = n * 100, sigma_init = 2, sigma_step = 0.01, verbose = FALSE){
   steps = length(intervals)
   counter = vector("numeric", steps)
   n_per = ceiling(n * prop)
@@ -58,6 +58,7 @@ randomPeaks = function(n = n_peaks, p = n_traits, x = rep(1, p), intervals = 1, 
       if(corr < intervals[i]){
         if(counter[i] < n_per[i]){
           counter[i] = counter[i] + 1
+          if(verbose) print(counter)
           peaks[k,] = rpeak * runif(1, dz_limits[1], dz_limits[2])
           k = k + 1
         }
@@ -81,6 +82,7 @@ randomPeaks = function(n = n_peaks, p = n_traits, x = rep(1, p), intervals = 1, 
         if(corr < intervals[i]){
           if(counter[i] < n_per[i]){
             counter[i] = counter[i] + 1
+            if(verbose) print(counter)
             peaks[k,] = rpeak * runif(1, dz_limits[1], dz_limits[2])
             k = k + 1
             mask = which(counter != n_per)
@@ -159,6 +161,7 @@ runSimulation = function(G_type = c("Diagonal", "Integrated"), G = NULL,
     trajectory$W_bar = W_bar
     trajectory$W_bar_grad = W_bar_grad
     trajectory$Surface_type = Surface_type
+    trajectory$normZ = Norm(trajectory$z)
     return(trajectory)
 }
 
@@ -185,6 +188,24 @@ runTrypitch = function(G_diag, peakPool_diag, G_corr, peakPool_corr, n = 1000, n
        CM = G_corr_W_multi)
 }
 
+runTrypitchList = function(Gs, peakPools, n_peaks, n = 1000, scale = 4, parallel = TRUE){
+    n_sim = 2*length(Gs)
+    results = vector("list", n_sim)
+    for(i in seq(1, n_sim, 2))
+    {
+        results[[i]] = llply(1:n, function(x) runSimulation("Integrated", Gs[[i]],   1, n_traits, 
+                                                            scale = scale, 
+                                                            peakPool = peakPools[[i]]), 
+                             .parallel = parallel)  
+        results[[i+1]] = llply(1:n, function(x) runSimulation("Integrated", Gs[[i]], n_peaks, n_traits, 
+                                                              scale = scale, 
+                                                              peakPool = peakPools[[i]]), 
+                               .parallel = parallel)  
+    }
+    names(results) = names(Gs)
+    return(results)
+}
+
 G_factory = function(p, rho, sigma = 0.1){
   while(TRUE){
     G = matrix(rnorm(p*p, rho, sigma), p, p)
@@ -195,3 +216,9 @@ G_factory = function(p, rho, sigma = 0.1){
   G
 }
 
+ReplaceDiagonal = function(x, d){
+    d = sqrt(d)
+    c.x = cov2cor(x)
+    d = sqrt(diag(x))
+    outer(d, d) * c.x
+}

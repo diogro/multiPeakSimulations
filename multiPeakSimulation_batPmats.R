@@ -4,7 +4,9 @@ source("./trajectoryTools.R")
 
 if(!require(MASS)){install.packages("MASS"); library(MASS)}
 
-load("./orders.Rdata")
+bat_Ps = list(Ariteus_flavescens = as.matrix(read.csv("./plots/data/cov.matrix_Ariteus_flavescens.csv", row.names = 1)),
+              Artibeus_fimbriatus = as.matrix(read.csv("./plots/data/cov.matrix_Artibeus_fimbriatus.csv", row.names = 1)),
+              Brachyphylla_cavernarum = as.matrix(read.csv("./plots/data/cov.matrix_Brachyphylla_cavernarum.csv", row.names = 1)))
 
 if(!require(doMC)){install.packages("doMC"); library(doMC)}
 registerDoMC(64)
@@ -18,14 +20,12 @@ space_size = 10
 ## Correlated
 
 # G_corr = G_factory(n_traits, rho = 0.8)
-sapply(mammal.orders, CalcR2)
-G_corr = mammal.orders$Lutreolina
-n_traits = dim(G_corr)[1]
-x = eigen(G_corr)$vector[,1]
+sapply(bat_Ps, CalcR2)
+n_traits = dim(bat_Ps[[1]])[1]
 
 n = 100000
-peakPool_random = randomPeaks(n, p = n_traits, x = eigen(G_corr)$vector[,1], dz_lim = c(3, space_size))
-cor_dist = sort(apply(peakPool_random, 1, vector_cor, eigen(G_corr)$vector[,1]))
+peakPool_random = randomPeaks(n, p = n_traits, x = rep(1, n_traits), dz_lim = c(3, space_size))
+cor_dist = sort(apply(peakPool_random, 1, vector_cor, eigen(bat_Ps[[1]])$vector[,1]))
 shapes = fitdistr(cor_dist, dbeta, list(shape1=1, shape2=10))
 
 target = function(x) rbeta_mixture(x, shapes[[1]], c(1, 1), 0.15) 
@@ -36,13 +36,16 @@ df = tidyr::gather(data.frame(beta_enriched = target(n),
 target_density = ggplot(df, aes(value, group = dist, color = dist)) + geom_density(alpha = 0.7) + scale_x_continuous(limits = c(0, 1))
 save_plot("plots/target_histogram.png", target_density, base_hei = 7, base_asp = 1.3)
 
-plot(diag(G_corr))
 dev.off()
 td = target(n)
 hs = hist(td, plot = F, breaks = 20)
 
-peakPool_G_corr_enriched = randomPeaks(n = 10000, p = n_traits, x = eigen(G_corr)$vector[,1], intervals = hs$breaks[-1], 
-                                       prop = hs$counts/n,dz_lim = c(3, space_size), verbose = FALSE)
+peakPools = list(randomPeaks(n = 10000, p = n_traits, x = eigen(bat_Ps[[1]])$vector[,1],
+                             intervals = hs$breaks[-1], prop = hs$counts/n,dz_lim = c(3, space_size), verbose = FALSE),
+                 randomPeaks(n = 10000, p = n_traits, x = eigen(bat_Ps[[2]])$vector[,1],
+                             intervals = hs$breaks[-1], prop = hs$counts/n,dz_lim = c(3, space_size), verbose = FALSE),
+                 randomPeaks(n = 10000, p = n_traits, x = eigen(bat_Ps[[3]])$vector[,1],
+                             intervals = hs$breaks[-1], prop = hs$counts/n,dz_lim = c(3, space_size), verbose = FALSE))
 
 ## Diagonal
 G_diag = ReplaceDiagonal(G_factory(n_traits, rho = 0.05), diag(G_corr))
@@ -61,16 +64,19 @@ peakPool_G_diag_enriched = randomPeaks(n = 10000, p = n_traits, x = eigen(G_diag
 # Test runs
 #########################
 
-runSimulation("Integrated", G_corr, n_peaks = 1, n_traits, scale = 40, peakPool = peakPool_G_corr_enriched)
-runSimulation("Diagonal", G_diag, n_peaks = 1, n_traits, scale = 40, peakPool = peakPool_G_corr_enriched)
-runSimulation("Integrated", G_corr, n_peaks = 50, n_traits, scale = 40, peakPool = peakPool_random)
-runSimulation("Diagonal", G_diag, n_peaks = 10, n_traits, scale = 40, peakPool = peakPool_random)
+runSimulation("Integrated", bat_Ps[[1]], n_peaks = 1, n_traits, scale = 1, peakPool = peakPools[[1]])
+runSimulation("Integrated", bat_Ps[[2]], n_peaks = 1, n_traits, scale = 1, peakPool = peakPools[[2]])
+runSimulation("Integrated", bat_Ps[[3]], n_peaks = 1, n_traits, scale = 1, peakPool = peakPools[[3]])
+
+runSimulation("Integrated", bat_Ps[[1]], n_peaks = 50, n_traits, scale = 1, peakPool = peakPools[[1]])
+runSimulation("Integrated", bat_Ps[[2]], n_peaks = 50, n_traits, scale = 1, peakPool = peakPools[[2]])
+runSimulation("Integrated", bat_Ps[[3]], n_peaks = 50, n_traits, scale = 1, peakPool = peakPools[[3]])
 
 # Simulations
 #########################
 
 results_random   = runTrypitch(G_diag, peakPool_random,          G_corr, peakPool_random,          n = 512, n_peaks = 50, scale = 40)
-results_enriched = runTrypitch(G_diag, peakPool_G_corr_enriched, G_corr, peakPool_G_corr_enriched, n = 256, n_peaks = 50, scale = 40)
+results_enriched = runTrypitchList(bat_Ps, peakPools, n = 32, n_peaks = 10, scale = 1)
 # results_uniform  = runTrypitch(G_diag, peakPool_G_corr_uniform,  G_corr, peakPool_G_corr_uniform)
 # 
 #save(results_enriched,
