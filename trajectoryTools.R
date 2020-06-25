@@ -193,16 +193,17 @@ runTrypitchList = function(Gs, peakPools, n_peaks, n = 1000, scale = 4, parallel
     results = vector("list", n_sim)
     for(i in seq(1, n_sim, 2))
     {
-        results[[i]] = llply(1:n, function(x) runSimulation("Integrated", Gs[[i]],   1, n_traits, 
+        k = (i + 1)/2
+        results[[i]] = llply(1:n, function(x) runSimulation("Integrated", Gs[[k]],   1, n_traits, 
                                                             scale = scale, 
-                                                            peakPool = peakPools[[i]]), 
+                                                            peakPool = peakPools[[k]]), 
                              .parallel = parallel)  
-        results[[i+1]] = llply(1:n, function(x) runSimulation("Integrated", Gs[[i]], n_peaks, n_traits, 
+        results[[i+1]] = llply(1:n, function(x) runSimulation("Integrated", Gs[[k]], n_peaks, n_traits, 
                                                               scale = scale, 
-                                                              peakPool = peakPools[[i]]), 
+                                                              peakPool = peakPools[[k]]), 
                                .parallel = parallel)  
     }
-    names(results) = names(Gs)
+    names(results) = rep(names(Gs), each = 2)
     return(results)
 }
 
