@@ -206,6 +206,28 @@ runTrypitchList = function(Gs, peakPools, n_peaks, n = 1000, scale = 4, parallel
     return(results)
 }
 
+ReplaceDiagonal = function(x, d){
+    d = sqrt(d)
+    c.x = cov2cor(x)
+    outer(d, d) * c.x
+}
+make_matrix = function(eVal, eVec, p = 1) eVec %*% diag(eVal^p) %*% t(eVec)
+
+targetIntegration = function(mat, target){
+  eigX = eigen(mat)
+  eVal = eigX$values
+  eVec = eigX$vectors
+  f = function(p, target) (CalcEigenVar(make_matrix(eVal, eVec, p)) - target)^2
+  exponent = optimize(f, target = target, c(1, 20))$minimum
+  new_mat = ReplaceDiagonal(make_matrix(eVal, eVec, exponent), d = diag(mat))
+  return(new_mat)
+}
+
+G_bend = function(p, rho, lmean = 0.1, sigma = 1){
+ vars = rlnorm(p, lmean, sigma)
+ targetIntegration(RandomMatrix(p, 1, variance = vars, LKJ = FALSE), rho)
+}
+
 G_factory = function(p, rho, sigma = 0.1){
   while(TRUE){
     G = matrix(rnorm(p*p, rho, sigma), p, p)
@@ -214,11 +236,4 @@ G_factory = function(p, rho, sigma = 0.1){
     tryCatch({chol(G); break}, error = function(x) FALSE)
   }
   G
-}
-
-ReplaceDiagonal = function(x, d){
-    d = sqrt(d)
-    c.x = cov2cor(x)
-    d = sqrt(diag(x))
-    outer(d, d) * c.x
 }
