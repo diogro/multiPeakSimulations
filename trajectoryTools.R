@@ -11,9 +11,6 @@ if(!require(cowsay)){install.packages("cowsay"); library(cowsay)}
 if(!require(MASS)){install.packages("MASS"); library(MASS)}
 
 
-diff_cut_off = 1e-5
-max_gens = 50000
-max_stand_still = 1000
 
 mypalette = colorRampPalette(c(wes_palette(10, name = "Zissou1", type = "continuous"), "darkred"))(50)
 
@@ -127,11 +124,18 @@ calculateTrajectory <- function (start_position, G, W_bar, W_bar_grad, scale = 2
   trajectory = unique(trajectory[!is.na(trajectory[,1]),])
   betas = betas[!is.na(betas[,1]),]
   net_dz = trajectory[dim(trajectory)[1],] - start_position
+  nGen = nrow(trajectory)
+  if(trim_trajectory){
+      trim = round(seq(1, nGen, length.out = 100))
+      trajectory = trajectory[trim,]
+      betas      = betas[trim,]
+  }
   return(list(start_position = start_position,
               trajectory = trajectory, 
               betas = betas, 
               net_beta = net_beta,
-              net_dz = net_dz))
+              net_dz = net_dz, 
+              nGen = nGen))
 }
 
 runSimulation = function(G_type = c("Diagonal", "Integrated"), G = NULL,
@@ -160,11 +164,10 @@ runSimulation = function(G_type = c("Diagonal", "Integrated"), G = NULL,
     trajectory$gmax = gmax
     trajectory$theta = theta
     trajectory$z = trajectory$trajectory[dim(trajectory$trajectory)[1],]
-    trajectory$W_bar = W_bar
-    trajectory$W_bar_grad = W_bar_grad
+    #trajectory$W_bar = W_bar
+    #trajectory$W_bar_grad = W_bar_grad
     trajectory$Surface_type = Surface_type
     trajectory$normZ = Norm(trajectory$z)
-    trajectory$nGen = nrow(trajectory$trajectory)
     return(trajectory)
 }
 
