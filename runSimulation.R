@@ -13,7 +13,7 @@ if (sys.nframe() == 0L) {
     make_option("--max_dist", default = 10,
                  help = ("Maximum distance of peaks from origin."),
                  metavar = "max_dist"),
-    make_option("--max_gens", default = 50000, 
+    make_option("--max_gens", default = 20000, 
                  help = ("Maximum number of generations."),
                  metavar = "max_gens"),
     make_option("--diff_cut_off", default = 1e-5, 
@@ -103,6 +103,7 @@ if (!file.exists(file.path(output.dir, "Rds")))
 output_name = paste0(type,
                     "_minDist-", min_dist,
                     "_dcoff-", diff_cut_off,
+                    "_maxGens-", max_gens,
                     "_nPeaks-", n_peaks,
                     "_nSims-", n_sims,
                     "_seed-", random_seed)
