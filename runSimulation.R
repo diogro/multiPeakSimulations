@@ -62,6 +62,7 @@ if (sys.nframe() == 0L) {
 #n_cores = 1
 
 set.seed(random_seed)
+if(n_cores < 1) n_cores = 1
 registerDoMC(cores=n_cores)
 
 source("./prepareHighDim.R")
