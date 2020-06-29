@@ -3,13 +3,6 @@ source("./trajectoryTools.R")
 
 load("./orders.Rdata")
 
-if(!require(doMC)){install.packages("doMC"); library(doMC)}
-n_cores = min(detectCores()-1, 64)
-registerDoMC(n_cores)
-
-min_dist = 3
-space_size = 10
-
 # G matrices
 #########################
 
@@ -21,7 +14,6 @@ max_int = max(sapply(mammal.orders, CalcEigenVar))
 G_obs = mammal.orders$Lutreolina
 n_traits = dim(G_obs)[1]
 
-set.seed(42)
 #Random_G = RandomMatrix(n_traits, variance = diag(G_obs), LKJ = FALSE)
 #G_corr = expEigenVal(Random_G, 4)
 G_corr = G_obs

@@ -31,6 +31,9 @@ if (sys.nframe() == 0L) {
     make_option("--trim_trajectory", default = TRUE,
                 help = ("Trim trajectory? If FALSE, will produce very large output."),
                 metavar = "trim_trajectory"),
+    make_option("--random_seed", default = 42,
+                help = ("Number of cores to use in computation."),
+                metavar = "random_seed"),
     make_option("--n_cores", default = min(detectCores()-1, 64),
                 help = ("Number of cores to use in computation."),
                 metavar = "n_cores")
@@ -50,6 +53,7 @@ if (sys.nframe() == 0L) {
   n_sims = opt$options$n_sims
   n_peaks = opt$options$n_peaks
   trim_trajectory = opt$options$trim_trajectory
+  random_seed = opt$options$random_seed
   n_cores = opt$options$n_cores
 }
 #type = "random"
@@ -57,6 +61,7 @@ if (sys.nframe() == 0L) {
 #n_peaks = 2
 #n_cores = 1
 
+set.seed(random_seed)
 registerDoMC(cores=n_cores)
 
 source("./prepareHighDim.R")
@@ -99,7 +104,8 @@ output_name = paste0(type,
                     "_minDist-", min_dist,
                     "_dcoff-", diff_cut_off,
                     "_nPeaks-", n_peaks,
-                    "_nSims-", n_sims)
+                    "_nSims-", n_sims,
+                    "_seed-", random_seed)
 saveRDS(results, file = file.path(output.dir, "Rds", paste0(output_name, ".Rds")))
  
 plots = plot_grid(plotDzgmax_normdz(results$DS, ylim = c(2, space_size), main = "Diagonal G - Single Peak"),

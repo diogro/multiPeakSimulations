@@ -1,4 +1,5 @@
-if(!require(ContourFunctions)){devtools::install_github("CollinErickson/contour"); library(ContourFunctions)}
+if(!require(remotes)){install.packages("remotes"); library(remotes)}
+if(!require(ContourFunctions)){remotes::install_github("CollinErickson/contour"); library(ContourFunctions)}
 if(!require(plotrix)){install.packages("plotrix"); library(plotrix)}
 if(!require(ggplot2)){install.packages("ggplot2"); library(ggplot2)}
 if(!require(cowplot)){install.packages("cowplot"); library(cowplot)}
