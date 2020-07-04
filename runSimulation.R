@@ -4,9 +4,15 @@ if(!require(doMC)){install.packages("doMC"); library(doMC)}
 
 if (sys.nframe() == 0L) {
   option_list <- list(
+    make_option("--label", 
+                help = ("Integrated matrix label"),
+                metavar = "label"),
     make_option("--type", 
                  help = ("Type of landscape:random or enriched."),
                  metavar = "type"),
+    make_option("--diag", default = "low",
+                help = ("Type of diagonal matrix"),
+                metavar = "diag_mat_type"),
     make_option("--min_dist", default = 3, 
                  help = ("Minimum distance of peaks from origin."),
                  metavar = "min_dist"),
@@ -44,7 +50,9 @@ if (sys.nframe() == 0L) {
   
   ## aliases
   opt <- parse_args(parser_object, args = commandArgs(trailingOnly = TRUE), positional_arguments = TRUE)
+  label <- opt$options$label
   type <- opt$options$type
+  diag_mat_type <- opt$options$diag_mat_type
   min_dist = opt$options$min_dist
   space_size = opt$options$max_dist
   max_gens = opt$options$max_gens
@@ -101,7 +109,8 @@ if (!file.exists(file.path(output.dir, "Rds")))
   dir.create(file.path(output.dir, "Rds"), showWarnings = TRUE, recursive = TRUE)
 
 
-output_name = paste0(type,
+output_name = paste0(label, "-", type,
+                    "-diag_mat_type-", diag_mat_type,
                     "_minDist-", min_dist,
                     "_dcoff-", diff_cut_off,
                     "_maxGens-", max_gens,

@@ -41,7 +41,12 @@ peakPool_G_corr_enriched = randomPeaks(n = 10000,
 
 
 ## Diagonal
-G_diag = expEigenVal(G_obs, 0.2)
+if(diag_mat_type == "low"){
+  G_diag = expEigenVal(G_obs, 0.2)
+} else if(diag_mat_type == "diag"){
+  G_diag = diag(diag(G_obs))
+} else
+  stop("Unknown low integration matrix type.")
 CalcEigenVar(G_diag)
 eigen(G_diag)$vectors[,1]
 
