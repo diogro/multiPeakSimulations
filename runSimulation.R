@@ -12,7 +12,7 @@ if (sys.nframe() == 0L) {
                  metavar = "type"),
     make_option("--diag", default = "low",
                 help = ("Type of diagonal matrix"),
-                metavar = "diag_mat_type"),
+                metavar = "diag"),
     make_option("--min_dist", default = 3, 
                  help = ("Minimum distance of peaks from origin."),
                  metavar = "min_dist"),
@@ -52,7 +52,7 @@ if (sys.nframe() == 0L) {
   opt <- parse_args(parser_object, args = commandArgs(trailingOnly = TRUE), positional_arguments = TRUE)
   label <- opt$options$label
   type <- opt$options$type
-  diag_mat_type <- opt$options$diag_mat_type
+  diag_mat_type <- opt$options$diag
   min_dist = opt$options$min_dist
   space_size = opt$options$max_dist
   max_gens = opt$options$max_gens
