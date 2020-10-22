@@ -8,10 +8,8 @@ if(!require(matrixStats)){install.packages("matrixStats"); library(matrixStats)}
 if(!require(tictoc)){install.packages("tictoc"); library(tictoc)}
 if(!require(NCmisc)){install.packages("NCmisc"); library(NCmisc)}
 if(!require(wesanderson)){install.packages("wesanderson"); library(wesanderson)}
-
-diff_cut_off = 1e-4
-max_gens = 10000
-max_stand_still = 100
+if(!require(cowsay)){install.packages("cowsay"); library(cowsay)}
+if(!require(MASS)){install.packages("MASS"); library(MASS)}
 
 mypalette = colorRampPalette(c(wes_palette(10, name = "Zissou1", type = "continuous"), "darkred"))(50)
 
@@ -125,11 +123,18 @@ calculateTrajectory <- function (start_position, G, W_bar, W_bar_grad, scale = 2
   trajectory = unique(trajectory[!is.na(trajectory[,1]),])
   betas = betas[!is.na(betas[,1]),]
   net_dz = trajectory[dim(trajectory)[1],] - start_position
+  nGen = nrow(trajectory)
+  if(trim_trajectory){
+      trim = round(seq(1, nGen, length.out = 100))
+      trajectory = trajectory[trim,]
+      betas      = betas[trim,]
+  }
   return(list(start_position = start_position,
               trajectory = trajectory, 
               betas = betas, 
               net_beta = net_beta,
-              net_dz = net_dz))
+              net_dz = net_dz, 
+              nGen = nGen))
 }
 
 runSimulation = function(G_type = c("Diagonal", "Integrated"), G = NULL,
@@ -158,26 +163,30 @@ runSimulation = function(G_type = c("Diagonal", "Integrated"), G = NULL,
     trajectory$gmax = gmax
     trajectory$theta = theta
     trajectory$z = trajectory$trajectory[dim(trajectory$trajectory)[1],]
-    trajectory$W_bar = W_bar
-    trajectory$W_bar_grad = W_bar_grad
+    #trajectory$W_bar = W_bar
+    #trajectory$W_bar_grad = W_bar_grad
     trajectory$Surface_type = Surface_type
     trajectory$normZ = Norm(trajectory$z)
     return(trajectory)
 }
 
 runTrypitch = function(G_diag, peakPool_diag, G_corr, peakPool_corr, n = 1000, n_peaks = 50, scale = 4, parallel = TRUE){
+  say("G diag single")
   G_diag_W_single = llply(1:n, function(x) runSimulation("Diag", G_diag,   1, n_traits, 
                                                          scale = scale, 
                                                          peakPool = peakPool_diag), 
                           .parallel = parallel)
+  say("G corr single")
   G_corr_W_single = llply(1:n, function(x) runSimulation("Inte", G_corr,   1, n_traits, 
                                                          scale = scale, 
                                                          peakPool = peakPool_corr), 
                           .parallel = parallel)
+  say("G diag multi")
   G_diag_W_multi  = llply(1:n, function(x) runSimulation("Diag", G_diag, n_peaks, n_traits, 
                                                          scale = scale, 
                                                          peakPool = peakPool_diag), 
                           .parallel = parallel)
+  say("G corr multi")
   G_corr_W_multi  = llply(1:n, function(x) runSimulation("Inte", G_corr, n_peaks, n_traits, 
                                                          scale = scale, 
                                                          peakPool = peakPool_corr), 
@@ -206,6 +215,20 @@ runTrypitchList = function(Gs, peakPools, n_peaks, n = 1000, scale = 4, parallel
     return(results)
 }
 
+ReplaceDiagonal = function(x, d){
+    d = sqrt(d)
+    c.x = cov2cor(x)
+    outer(d, d) * c.x
+}
+make_matrix = function(eVal, eVec, p = 1) eVec %*% diag(eVal^p) %*% t(eVec)
+expEigenVal = function(mat, p){
+  eigX = eigen(mat)
+  eVal = eigX$values
+  eVec = eigX$vectors
+  new_mat = ReplaceDiagonal(make_matrix(eVal, eVec, p), d = diag(mat))
+  return(new_mat)
+}
+
 G_factory = function(p, rho, sigma = 0.1){
   while(TRUE){
     G = matrix(rnorm(p*p, rho, sigma), p, p)
@@ -214,11 +237,4 @@ G_factory = function(p, rho, sigma = 0.1){
     tryCatch({chol(G); break}, error = function(x) FALSE)
   }
   G
-}
-
-ReplaceDiagonal = function(x, d){
-    d = sqrt(d)
-    c.x = cov2cor(x)
-    d = sqrt(diag(x))
-    outer(d, d) * c.x
 }
