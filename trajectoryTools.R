@@ -7,7 +7,7 @@ if(!require(purrr)){install.packages("purrr"); library(purrr)}
 if(!require(matrixStats)){install.packages("matrixStats"); library(matrixStats)}
 if(!require(tictoc)){install.packages("tictoc"); library(tictoc)}
 if(!require(NCmisc)){install.packages("NCmisc"); library(NCmisc)}
-
+if(!require(wesanderson)){install.packages("wesanderson"); library(wesanderson)}
 
 diff_cut_off = 1e-4
 max_gens = 10000

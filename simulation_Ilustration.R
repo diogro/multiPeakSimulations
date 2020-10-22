@@ -1,4 +1,5 @@
 source("./trajectoryTools.R")
+source("./plotTools.R")
 if(!require(magick)){install.packages("magick"); library(magick)}
 
 ################

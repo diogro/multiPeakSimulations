@@ -6,7 +6,6 @@ theme_set(theme_cowplot())
 if(!require(wesanderson)) { install.packages("wesanderson"); library(wesanderson) }
 if(!require(grDevices)) { install.packages("grDevices"); library(grDevices) }
 
-
 plotDzgmax_normdz = function(results, ylim, main = ""){
   df = data.frame(dz_gmax = sapply(results, function(x) vector_cor(x$net_dz, x$gmax)),
                   norm_dz = sapply(results, function(x) Norm(x$net_dz)))
@@ -37,8 +36,6 @@ plotW_bar_trajectory = function(run, xlimits = c(-space_size, space_size), ylimi
             abline(h=0)
           }, ...)
 }
-
-
 
 plotW_bar = function(theta, space_size = 6, xlimits = c(-space_size, space_size), ylimits = c(-space_size, space_size), resolution = 0.2, 
                      mypalette = colorRampPalette(c("white", wes_palette(10, name = "Zissou1", type = "continuous"), "darkred")), 
