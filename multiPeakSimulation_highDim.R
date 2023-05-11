@@ -7,7 +7,7 @@ if(!require(MASS)){install.packages("MASS"); library(MASS)}
 load("./orders.Rdata")
 
 if(!require(doMC)){install.packages("doMC"); library(doMC)}
-registerDoMC(4)
+registerDoMC(64)
 
 space_size = 10
 
@@ -23,9 +23,10 @@ max_int = max(sapply(mammal.orders, CalcEigenVar))
 G_obs = mammal.orders$Lutreolina
 n_traits = dim(G_obs)[1]
 
-set.seed(42)
-Random_G = RandomMatrix(n_traits, variance = diag(G_obs), LKJ = FALSE)
-G_corr = expEigenVal(Random_G, 4)
+#set.seed(42)
+#Random_G = RandomMatrix(n_traits, variance = diag(G_obs), LKJ = FALSE)
+#G_corr = expEigenVal(Random_G, 4)
+G_corr = G_obs
 CalcEigenVar(G_corr)
 x = eigen(G_corr)$vector[,1]
 
@@ -68,7 +69,7 @@ peakPool_G_corr_enriched = randomPeaks(n = 10000,
 
 ## Diagonal
 
-G_diag = expEigenVal(Random_G, 0.2)
+G_diag = expEigenVal(G_corr, 0.2)
 CalcEigenVar(G_diag)
 eigen(G_diag)$vectors[,1]
 
@@ -77,7 +78,7 @@ shapes = fitdistr(cor_dist, dbeta, list(shape1=1, shape2=10))
 
 target = function(x) rbeta_mixture(x, shapes[[1]], c(1, 1), 0.15) 
 td = target(n)
-hs = hist(td, plot = F, breaks = 20)
+hs = hist(td, plot = F, breaks = 20)     
 
 peakPool_G_diag_enriched = randomPeaks(n = 10000, 
                                        p = n_traits, 
@@ -99,10 +100,10 @@ runSimulation("Diagonal", G_diag, n_peaks = 10, n_traits, scale = 40, peakPool =
 
 results_random   = runTrypitch(G_diag, peakPool_random,          
                                G_corr, peakPool_random,          
-                               n = 256, n_peaks = 50, scale = 40)
+                               n = 1024, n_peaks = 50, scale = 40)
 results_enriched = runTrypitch(G_diag, peakPool_G_diag_enriched, 
                                G_corr, peakPool_G_corr_enriched, 
-                               n = 256, n_peaks = 50, scale = 40)
+                               n = 1024, n_peaks = 50, scale = 40)
 # results_uniform  = runTrypitch(G_diag, peakPool_G_corr_uniform,  G_corr, peakPool_G_corr_uniform)
 # 
 #save(results_enriched,

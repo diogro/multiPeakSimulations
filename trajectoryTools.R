@@ -7,11 +7,12 @@ if(!require(purrr)){install.packages("purrr"); library(purrr)}
 if(!require(matrixStats)){install.packages("matrixStats"); library(matrixStats)}
 if(!require(tictoc)){install.packages("tictoc"); library(tictoc)}
 if(!require(NCmisc)){install.packages("NCmisc"); library(NCmisc)}
+if(!require(cowsay)){install.packages("cowsay"); library(cowsay)}
 
 
-diff_cut_off = 1e-4
-max_gens = 10000
-max_stand_still = 100
+diff_cut_off = 1e-6
+max_gens = 40000
+max_stand_still = 1000
 
 mypalette = colorRampPalette(c(wes_palette(10, name = "Zissou1", type = "continuous"), "darkred"))(50)
 
@@ -166,18 +167,22 @@ runSimulation = function(G_type = c("Diagonal", "Integrated"), G = NULL,
 }
 
 runTrypitch = function(G_diag, peakPool_diag, G_corr, peakPool_corr, n = 1000, n_peaks = 50, scale = 4, parallel = TRUE){
+  say("G diag single")
   G_diag_W_single = llply(1:n, function(x) runSimulation("Diag", G_diag,   1, n_traits, 
                                                          scale = scale, 
                                                          peakPool = peakPool_diag), 
                           .parallel = parallel)
+  say("G corr single")
   G_corr_W_single = llply(1:n, function(x) runSimulation("Inte", G_corr,   1, n_traits, 
                                                          scale = scale, 
                                                          peakPool = peakPool_corr), 
                           .parallel = parallel)
+  say("G diag multi")
   G_diag_W_multi  = llply(1:n, function(x) runSimulation("Diag", G_diag, n_peaks, n_traits, 
                                                          scale = scale, 
                                                          peakPool = peakPool_diag), 
                           .parallel = parallel)
+  say("G corr multi")
   G_corr_W_multi  = llply(1:n, function(x) runSimulation("Inte", G_corr, n_peaks, n_traits, 
                                                          scale = scale, 
                                                          peakPool = peakPool_corr), 
