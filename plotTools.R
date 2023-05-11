@@ -1,11 +1,11 @@
-if(!require(ContourFunctions)){devtools::install_github("CollinErickson/contour"); library(ContourFunctions)}
+if(!require(remotes)){install.packages("remotes"); library(remotes)}
+if(!require(ContourFunctions)){remotes::install_github("CollinErickson/contour"); library(ContourFunctions)}
 if(!require(plotrix)){install.packages("plotrix"); library(plotrix)}
 if(!require(ggplot2)){install.packages("ggplot2"); library(ggplot2)}
 if(!require(cowplot)){install.packages("cowplot"); library(cowplot)}
 theme_set(theme_cowplot())
 if(!require(wesanderson)) { install.packages("wesanderson"); library(wesanderson) }
 if(!require(grDevices)) { install.packages("grDevices"); library(grDevices) }
-
 
 plotDzgmax_normdz = function(results, ylim, main = ""){
   df = data.frame(dz_gmax = sapply(results, function(x) vector_cor(x$net_dz, x$gmax)),
@@ -37,8 +37,6 @@ plotW_bar_trajectory = function(run, xlimits = c(-space_size, space_size), ylimi
             abline(h=0)
           }, ...)
 }
-
-
 
 plotW_bar = function(theta, space_size = 6, xlimits = c(-space_size, space_size), ylimits = c(-space_size, space_size), resolution = 0.2, 
                      mypalette = colorRampPalette(c("white", wes_palette(10, name = "Zissou1", type = "continuous"), "darkred")), 
