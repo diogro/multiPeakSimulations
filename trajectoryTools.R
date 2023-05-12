@@ -1,20 +1,20 @@
-if(!require(lattice)) { install.packages("lattice"); library(lattice) }
-if(!require(mvtnorm)) { install.packages("mvtnorm"); library(mvtnorm) }
-if(!require(numDeriv)) { install.packages("numDeriv"); library(numDeriv) }
-if(!require(ellipse)) { install.packages("ellipse"); library(ellipse) }
-if(!require(evolqg)){install.packages("evolqg"); library(evolqg)}
-if(!require(purrr)){install.packages("purrr"); library(purrr)}
-if(!require(matrixStats)){install.packages("matrixStats"); library(matrixStats)}
-if(!require(tictoc)){install.packages("tictoc"); library(tictoc)}
-if(!require(NCmisc)){install.packages("NCmisc"); library(NCmisc)}
-if(!require(wesanderson)){install.packages("wesanderson"); library(wesanderson)}
-if(!require(cowsay)){install.packages("cowsay"); library(cowsay)}
-if(!require(MASS)){install.packages("MASS"); library(MASS)}
+if(!require(lattice))     {pak::pkg_install("lattice"); library(lattice) }
+if(!require(mvtnorm))     {pak::pkg_install("mvtnorm"); library(mvtnorm) }
+if(!require(numDeriv))    {pak::pkg_install("numDeriv"); library(numDeriv) }
+if(!require(ellipse))     {pak::pkg_install("ellipse"); library(ellipse) }
+if(!require(evolqg))      {pak::pkg_install("evolqg"); library(evolqg)}
+if(!require(purrr))       {pak::pkg_install("purrr"); library(purrr)}
+if(!require(matrixStats)) {pak::pkg_install("matrixStats"); library(matrixStats)}
+if(!require(tictoc))      {pak::pkg_install("tictoc"); library(tictoc)}
+if(!require(NCmisc))      {pak::pkg_install("NCmisc"); library(NCmisc)}
+if(!require(wesanderson)) {pak::pkg_install("wesanderson"); library(wesanderson)}
+if(!require(cowsay))      {pak::pkg_install("cowsay"); library(cowsay)}
+if(!require(MASS))        {pak::pkg_install("MASS"); library(MASS)}
 
 
-diff_cut_off = 1e-6
-max_gens = 40000
-max_stand_still = 1000
+#diff_cut_off = 1e-6
+#max_gens = 40000
+#max_stand_still = 1000
 
 mypalette = colorRampPalette(c(wes_palette(10, name = "Zissou1", type = "continuous"), "darkred"))(50)
 
