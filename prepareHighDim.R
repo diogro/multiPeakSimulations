@@ -1,17 +1,6 @@
 source("./plotTools.R")
 source("./trajectoryTools.R")
 
-load("./orders.Rdata")
-
-# G matrices
-#########################
-
-## Correlated
-
-# G_corr = G_factory(n_traits, rho = 0.8)
-mammal.orders = llply(mammal.orders, function(x) (x + t(x))/2)
-max_int = max(sapply(mammal.orders, CalcEigenVar))
-G_obs = mammal.orders$Lutreolina
 n_traits = dim(G_obs)[1]
 
 #Random_G = RandomMatrix(n_traits, variance = diag(G_obs), LKJ = FALSE)
@@ -45,10 +34,12 @@ if(diag_mat_type == "low"){
   G_diag = expEigenVal(G_obs, 0.2)
 } else if(diag_mat_type == "diag"){
   G_diag = diag(diag(G_obs))
-} else
-  stop("Unknown low integration matrix type.")
-CalcEigenVar(G_diag)
-eigen(G_diag)$vectors[,1]
+} else{
+  log4r_error("Unknown low integration matrix type.")
+  stop()
+}
+log4r_info(paste0("Eigen variance in observed matrix: ", CalcEigenVar(G_obs)))
+log4r_info(paste0("Eigen variance in unconstrained matrix: ", CalcEigenVar(G_diag)))
 
 cor_dist = sort(apply(peakPool_random, 1, vector_cor, eigen(G_diag)$vector[,1]))
 shapes = fitdistr(cor_dist, dbeta, list(shape1=1, shape2=10))

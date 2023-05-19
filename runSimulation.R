@@ -11,7 +11,7 @@ if (sys.nframe() == 0L) {
                  help = ("Type of landscape:random or enriched."),
                  metavar = "type"),
     make_option("--diag", default = "low",
-                help = ("Type of diagonal matrix: [diag] or low"),
+                help = ("Type of diagonal matrix: diag or [low]"),
                 metavar = "diag"),
     make_option("--min_dist", default = 3, 
                  help = ("Minimum distance of peaks from origin. Default is 3."),
@@ -69,22 +69,44 @@ if (sys.nframe() == 0L) {
 #n_peaks = 2
 #n_cores = 1
 
+if(is.null(type)) stop("Please specify landscape type.")
+
+my_logfile = paste0("output/logs/", label, "-", type, ".log")
+if (!file.exists(file.path(my_logfile)))
+  file.create(file.path(my_logfile), showWarnings = TRUE, recursive = TRUE)
+source("logger.R")
+log4r_info(paste0("Starting with label ", label, " and ", type, " landscape."))
+
 set.seed(random_seed)
 if(n_cores < 1) n_cores = 1
 registerDoMC(cores=n_cores)
 
+matrix_files = dir("data", pattern = label, full.names = TRUE)
+if(length(matrix_files) > 1) {
+  log4r_error(paste("More than one file matches the given label, use a more specific label.\nMatching files: ", paste(matrix_files, collapse = " ")))
+  stop()
+}
+if(length(matrix_files) == 0) {
+  log4r_error("No available input matrix files match the supplied label.")
+  stop()
+}
+
+ensure_diag = function(x) (x + t(x))/2
+
+log4r_info(paste0("Reading matrix from file: ", matrix_files))
+G_obs = ensure_diag(as.matrix(read.csv(matrix_files, row.names = 1)))
+
 source("./prepareHighDim.R")
 
-if(is.null(type)) stop("Please specify landscape type.")
 if(type == "random"){
     peakPool_diag = peakPool_corr = peakPool_random
 } else if(type == "enriched"){
     peakPool_diag = peakPool_G_diag_enriched
     peakPool_corr = peakPool_G_corr_enriched
 } else 
-    stop("Unknown landscape type. Please use random or enriched.")
+    log4r_error("Unknown landscape type. Please use random or enriched.")
 
-say(paste("Running ", n_sims, " simulations for ", type," landscape with ", n_peaks, " peaks, using ", n_cores, " cores."), by = "spider")
+log4r_info(paste("Running", n_sims, "simulations for", type,"landscape with", n_peaks, "peaks, using", n_cores, "cores."))
 
 # Test runs
 #########################
@@ -118,10 +140,10 @@ output_name = paste0(label, "-", type,
                     "_seed-", random_seed)
 saveRDS(results, file = file.path(output.dir, "Rds", paste0(output_name, ".Rds")))
  
-plots = plot_grid(plotDzgmax_normdz(results$DS, ylim = c(2, space_size), main = "Diagonal G - Single Peak"),
-                  plotDzgmax_normdz(results$CS, ylim = c(2, space_size), main = "Integrated G - Single Peak"),
-                  plotDzgmax_normdz(results$DM, ylim = c(2, space_size), main = "Diagonal G - Multiple Peaks"),
-                  plotDzgmax_normdz(results$CM, ylim = c(2, space_size), main = "Integrated G - Multiple Peaks"),
+plots = plot_grid(plotDzgmax_normdz(results$DS, ylim = c(min_dist-1, space_size), main = "Diagonal G - Single Peak"),
+                  plotDzgmax_normdz(results$CS, ylim = c(min_dist-1, space_size), main = "Integrated G - Single Peak"),
+                  plotDzgmax_normdz(results$DM, ylim = c(min_dist-1, space_size), main = "Diagonal G - Multiple Peaks"),
+                  plotDzgmax_normdz(results$CM, ylim = c(min_dist-1, space_size), main = "Integrated G - Multiple Peaks"),
                   ncol = 2, labels = LETTERS[1:4])
 save_plot(file.path(output.dir, "plots", paste0(output_name, ".png")), plots, base_height = 5, base_asp = 1.3, ncol = 2, nrow = 2)
 

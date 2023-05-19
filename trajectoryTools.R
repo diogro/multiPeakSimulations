@@ -8,7 +8,6 @@ if(!require(matrixStats)) {pak::pkg_install("matrixStats"); library(matrixStats)
 if(!require(tictoc))      {pak::pkg_install("tictoc"); library(tictoc)}
 if(!require(NCmisc))      {pak::pkg_install("NCmisc"); library(NCmisc)}
 if(!require(wesanderson)) {pak::pkg_install("wesanderson"); library(wesanderson)}
-if(!require(cowsay))      {pak::pkg_install("cowsay"); library(cowsay)}
 if(!require(MASS))        {pak::pkg_install("MASS"); library(MASS)}
 
 
@@ -176,22 +175,22 @@ runSimulation = function(G_type = c("Diagonal", "Integrated"), G = NULL,
 }
 
 runTrypitch = function(G_diag, peakPool_diag, G_corr, peakPool_corr, n = 1000, n_peaks = 50, scale = 4, parallel = TRUE){
-  say("G diag single")
+  log4r_info("G diag single")
   G_diag_W_single = llply(1:n, function(x) runSimulation("Diag", G_diag,   1, n_traits, 
                                                          scale = scale, 
                                                          peakPool = peakPool_diag), 
                           .parallel = parallel)
-  say("G corr single")
+  log4r_info("G corr single")
   G_corr_W_single = llply(1:n, function(x) runSimulation("Inte", G_corr,   1, n_traits, 
                                                          scale = scale, 
                                                          peakPool = peakPool_corr), 
                           .parallel = parallel)
-  say("G diag multi")
+  log4r_info("G diag multi")
   G_diag_W_multi  = llply(1:n, function(x) runSimulation("Diag", G_diag, n_peaks, n_traits, 
                                                          scale = scale, 
                                                          peakPool = peakPool_diag), 
                           .parallel = parallel)
-  say("G corr multi")
+  log4r_info("G corr multi")
   G_corr_W_multi  = llply(1:n, function(x) runSimulation("Inte", G_corr, n_peaks, n_traits, 
                                                          scale = scale, 
                                                          peakPool = peakPool_corr), 
@@ -222,16 +221,21 @@ runTrypitchList = function(Gs, peakPools, n_peaks, n = 1000, scale = 4, parallel
 }
 
 ReplaceDiagonal = function(x, d){
-    d = sqrt(d)
-    c.x = cov2cor(x)
-    outer(d, d) * c.x
+  d = sqrt(d)
+  c.x = cov2cor(x)
+  outer(d, d) * c.x
 }
-make_matrix = function(eVal, eVec, p = 1) eVec %*% diag(eVal^p) %*% t(eVec)
+
+make_matrix = function(eVal, eVec, p = 1, s = 1) eVec %*% diag((eVal^p) * s) %*% t(eVec)
+
 expEigenVal = function(mat, p){
   eigX = eigen(mat)
   eVal = eigX$values
   eVec = eigX$vectors
-  new_mat = ReplaceDiagonal(make_matrix(eVal, eVec, p), d = diag(mat))
+  og_trace = sum(eVal)
+  new_trace = sum(eVal^p)
+  scale = og_trace/new_trace
+  new_mat = make_matrix(eVal, eVec, p, scale)
   return(new_mat)
 }
 

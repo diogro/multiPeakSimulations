@@ -4,3 +4,6 @@
 plots/*
 Rdatas/*
 Rplots.pdf
+data/*
+output/*
+old_plots/*
