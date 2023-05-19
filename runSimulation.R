@@ -106,7 +106,6 @@ if(type == "random"){
 } else 
     log4r_error("Unknown landscape type. Please use random or enriched.")
 
-log4r_info(paste("Running", n_sims, "simulations for", type,"landscape with", n_peaks, "peaks, using", n_cores, "cores."))
 
 # Test runs
 #########################
@@ -120,9 +119,12 @@ log4r_info(paste("Running", n_sims, "simulations for", type,"landscape with", n_
 # Simulations
 #########################
 
+log4r_info(paste("Running", n_sims, "simulations for", type,"landscape with", n_peaks, "peaks, using", n_cores, "cores."))
 results = runTrypitch(G_diag, peakPool_diag,          
                       G_corr, peakPool_corr,          
                       n = n_sims, n_peaks = n_peaks, scale = 40)
+log4r_info(paste("Simulations finished."))
+
 
 output.dir <- "./output"
 if (!file.exists(file.path(output.dir, "plots")))
@@ -138,8 +140,10 @@ output_name = paste0(label, "-", type,
                     "_nPeaks-", n_peaks,
                     "_nSims-", n_sims,
                     "_seed-", random_seed)
+log4r_info(paste("Ouputting results to:", paste0(output_name, ".Rds")))
 saveRDS(results, file = file.path(output.dir, "Rds", paste0(output_name, ".Rds")))
  
+log4r_info(paste("Making plots..."))
 plots = plot_grid(plotDzgmax_normdz(results$DS, ylim = c(min_dist-1, space_size), main = "Diagonal G - Single Peak"),
                   plotDzgmax_normdz(results$CS, ylim = c(min_dist-1, space_size), main = "Integrated G - Single Peak"),
                   plotDzgmax_normdz(results$DM, ylim = c(min_dist-1, space_size), main = "Diagonal G - Multiple Peaks"),
@@ -147,3 +151,4 @@ plots = plot_grid(plotDzgmax_normdz(results$DS, ylim = c(min_dist-1, space_size)
                   ncol = 2, labels = LETTERS[1:4])
 save_plot(file.path(output.dir, "plots", paste0(output_name, ".png")), plots, base_height = 5, base_asp = 1.3, ncol = 2, nrow = 2)
 
+log4r_info(paste("Done!"))
