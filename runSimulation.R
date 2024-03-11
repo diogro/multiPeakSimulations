@@ -42,7 +42,10 @@ if (sys.nframe() == 0L) {
                 metavar = "random_seed"),
     make_option("--n_cores", default = min(detectCores()-1, 64),
                 help = ("Number of cores to use in computation. Default is up to 64."),
-                metavar = "n_cores")
+                metavar = "n_cores"),
+    make_option("--use_cache", default = FALSE,
+                    help = ("Read simulation from cache if available. Default is FALSE."),
+                    metavar = "use_cache")
   )
   parser_object <- OptionParser(usage = "Rscript %prog --label MATRIX_LABEL --type [random|enriched] [aditional options]\n",
                                 option_list = option_list,
@@ -63,6 +66,7 @@ if (sys.nframe() == 0L) {
   trim_trajectory = opt$options$trim_trajectory
   random_seed = opt$options$random_seed
   n_cores = opt$options$n_cores
+  use_cache = opt$options$use_cache
 }
 #type = "random"
 #n_sims = 10
@@ -119,13 +123,6 @@ if(type == "random"){
 # Simulations
 #########################
 
-log4r_info(paste("Running", n_sims, "simulations for", type,"landscape with", n_peaks, "peaks, using", n_cores, "cores."))
-results = runTrypitch(G_diag, peakPool_diag,          
-                      G_corr, peakPool_corr,          
-                      n = n_sims, n_peaks = n_peaks, scale = 40)
-log4r_info(paste("Simulations finished."))
-
-
 output.dir <- "./output"
 if (!file.exists(file.path(output.dir, "plots")))
   dir.create(file.path(output.dir, "plots"), showWarnings = TRUE, recursive = TRUE)
@@ -140,14 +137,25 @@ output_name = paste0(label, "-", type,
                     "_nPeaks-", n_peaks,
                     "_nSims-", n_sims,
                     "_seed-", random_seed)
-log4r_info(paste("Ouputting results to:", paste0(output_name, ".Rds")))
-saveRDS(results, file = file.path(output.dir, "Rds", paste0(output_name, ".Rds")))
- 
+
+if(use_cache & file.exists(file.path(output.dir, "Rds", paste0(output_name, ".Rds")))){
+  log4r_info(paste("Reading results from cache..."))
+  results <- readRDS(file.path(output.dir, "Rds", paste0(output_name, ".Rds")))
+} else{
+  log4r_info(paste("Running", n_sims, "simulations for", type,"landscape with", n_peaks, "peaks, using", n_cores, "cores."))
+  results = runTrypitch(G_diag, peakPool_diag,          
+                        G_corr, peakPool_corr,          
+                        n = n_sims, n_peaks = n_peaks, scale = 40)
+  log4r_info(paste("Simulations finished."))
+  log4r_info(paste("Ouputting results to:", paste0(output_name, ".Rds")))
+  saveRDS(results, file = file.path(output.dir, "Rds", paste0(output_name, ".Rds")))
+}
+
 log4r_info(paste("Making plots..."))
-plots = plot_grid(plotDzgmax_normdz(results$DS, ylim = c(min_dist-1, space_size), main = "Diagonal G - Single Peak"),
-                  plotDzgmax_normdz(results$CS, ylim = c(min_dist-1, space_size), main = "Integrated G - Single Peak"),
-                  plotDzgmax_normdz(results$DM, ylim = c(min_dist-1, space_size), main = "Diagonal G - Multiple Peaks"),
-                  plotDzgmax_normdz(results$CM, ylim = c(min_dist-1, space_size), main = "Integrated G - Multiple Peaks"),
+plots = plot_grid(plotDzgmax_normdz(results$DS, ylim = c(min_dist-1, space_size), main = "Low Integration G - Single Peak"),
+                  plotDzgmax_normdz(results$CS, ylim = c(min_dist-1, space_size), main = "High Integration G - Single Peak"),
+                  plotDzgmax_normdz(results$DM, ylim = c(min_dist-1, space_size), main = "Low Integration G - Multiple Peaks"),
+                  plotDzgmax_normdz(results$CM, ylim = c(min_dist-1, space_size), main = "High Integration G - Multiple Peaks"),
                   ncol = 2, labels = LETTERS[1:4])
 save_plot(file.path(output.dir, "plots", paste0(output_name, ".png")), plots, base_height = 5, base_asp = 1.3, ncol = 2, nrow = 2)
 
